@@ -1,0 +1,60 @@
+{
+  "name": "aduoer-wow-sdk",
+  "version": "0.1.0",
+  "description": "OpenAPI-first SDK for building Aduoer Wow music origins",
+  "license": "MIT",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "openapi.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./openapi.json": "./openapi.json"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "clean": "rm -rf dist coverage openapi.json",
+    "build": "npm run clean && tsc -p tsconfig.build.json && node dist/write-openapi.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "check": "npm run typecheck && npm test && npm run build",
+    "release": "changeset publish"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.34.41",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.5",
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.15.32",
+    "@types/supertest": "^6.0.3",
+    "@vitest/coverage-v8": "^3.2.4",
+    "supertest": "^7.1.1",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Aduoer-Music/aduoer-wow-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Aduoer-Music/aduoer-wow-sdk/issues"
+  },
+  "homepage": "https://github.com/Aduoer-Music/aduoer-wow-template"
+}

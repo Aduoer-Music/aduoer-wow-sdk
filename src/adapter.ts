@@ -104,7 +104,7 @@ const statefulCapabilities = new Set([
   'userProfile'
 ]);
 
-export function inferCapabilities(adapter: WowAdapter, stateless = false): string[] {
+export function inferCapabilities(adapter: WowAdapter, stateless = true): string[] {
   return Object.entries(capabilityMethods)
     .filter(([, methods]) => methods.every((method) => typeof adapter[method as keyof WowAdapter] === 'function'))
     .filter(([capability]) => !stateless || !statefulCapabilities.has(capability))

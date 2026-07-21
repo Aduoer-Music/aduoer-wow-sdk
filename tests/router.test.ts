@@ -3,6 +3,7 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import {
   createWowRouter,
+  inferCapabilities,
   openApiDocument,
   sdkVersion,
   type Track,
@@ -30,6 +31,16 @@ function createApp(adapter: WowAdapter, token = 'test-token', stateless?: boolea
 }
 
 describe('createWowRouter', () => {
+  it('能力推断默认按无状态源过滤用户数据能力', () => {
+    const capabilities = inferCapabilities({
+      getUserPlaylist: async () => [],
+      favoriteTrack: async (_id, status) => ({ success: true, status })
+    });
+
+    expect(capabilities).not.toContain('userPlaylists');
+    expect(capabilities).not.toContain('trackFavorite');
+  });
+
   it('由 SDK 自己提供 /v1 前缀', async () => {
     await request(createApp({}))
       .get('/status')

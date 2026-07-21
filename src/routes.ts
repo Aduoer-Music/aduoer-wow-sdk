@@ -24,6 +24,7 @@ export interface WowRouteDefinition {
   responseArray?: boolean;
   parameters?: ParameterSpec[];
   bodySchema?: TSchema;
+  requiresStateful?: boolean;
   run(context: WowRequestContext, request: Request): Promise<unknown>;
 }
 
@@ -119,10 +120,11 @@ function simpleGet(
   response: SchemaName,
   method: AdapterMethod,
   feature: string,
-  responseArray = false
+  responseArray = false,
+  requiresStateful = false
 ): WowRouteDefinition {
   return {
-    method: 'get', path, summary, tag, response, responseArray,
+    method: 'get', path, summary, tag, response, responseArray, requiresStateful,
     run: ({ adapter }) => callAdapter(adapter, method, [], feature)
   };
 }
@@ -130,12 +132,16 @@ function simpleGet(
 export const wowRoutes: WowRouteDefinition[] = [
   {
     method: 'get', path: '/status', summary: '获取 Wow 源状态、SDK 版本、能力和音质选项', tag: 'status', response: 'Status',
-    run: async ({ adapter, qualityMap }) => ({
-      type: 'wow',
-      version: sdkVersion,
-      capabilities: (await import('./adapter')).inferCapabilities(adapter),
-      qualityMap: qualityMap ?? []
-    })
+    run: async ({ adapter, qualityMap, stateless }) => {
+      const resolvedStateless = stateless ?? true;
+      return {
+        type: 'wow',
+        version: sdkVersion,
+        stateless: resolvedStateless,
+        capabilities: (await import('./adapter')).inferCapabilities(adapter, resolvedStateless),
+        qualityMap: qualityMap ?? []
+      };
+    }
   },
   {
     method: 'get', path: '/playlist/list', summary: '获取歌单列表', tag: 'playlist', response: 'PlaylistPage',
@@ -172,29 +178,29 @@ export const wowRoutes: WowRouteDefinition[] = [
     ], 'playlists')
   },
   {
-    method: 'post', path: '/playlist/create', summary: '创建歌单', tag: 'playlist', response: 'Playlist', bodySchema: nameBody,
+    method: 'post', path: '/playlist/create', summary: '创建歌单', tag: 'playlist', response: 'Playlist', bodySchema: nameBody, requiresStateful: true,
     run: ({ adapter }, request) => callAdapter(adapter, 'createPlaylist', [bodyString(request, 'name')], 'playlistMutation')
   },
   {
-    method: 'post', path: '/playlist/delete', summary: '删除歌单', tag: 'playlist', response: 'MutationSuccess', bodySchema: idBody,
+    method: 'post', path: '/playlist/delete', summary: '删除歌单', tag: 'playlist', response: 'MutationSuccess', bodySchema: idBody, requiresStateful: true,
     run: ({ adapter }, request) => callAdapter(adapter, 'deletePlaylist', [bodyString(request, 'id')], 'playlistMutation')
   },
   {
-    method: 'post', path: '/playlist/update', summary: '更新歌单', tag: 'playlist', response: 'Playlist', bodySchema: updatePlaylistBody,
+    method: 'post', path: '/playlist/update', summary: '更新歌单', tag: 'playlist', response: 'Playlist', bodySchema: updatePlaylistBody, requiresStateful: true,
     run: ({ adapter }, request) => callAdapter(adapter, 'updatePlaylist', [
       bodyString(request, 'id'), bodyString(request, 'name'), bodyString(request, 'description', false)
     ], 'playlistMutation')
   },
   {
-    method: 'post', path: '/playlist/addTrack', summary: '添加歌曲到歌单', tag: 'playlist', response: 'MutationSuccess', bodySchema: playlistTrackBody,
+    method: 'post', path: '/playlist/addTrack', summary: '添加歌曲到歌单', tag: 'playlist', response: 'MutationSuccess', bodySchema: playlistTrackBody, requiresStateful: true,
     run: ({ adapter }, request) => callAdapter(adapter, 'addTrackToPlaylist', [bodyString(request, 'playlistId'), bodyString(request, 'trackId')], 'playlistMutation')
   },
   {
-    method: 'post', path: '/playlist/removeTrack', summary: '从歌单移除歌曲', tag: 'playlist', response: 'MutationSuccess', bodySchema: playlistTrackBody,
+    method: 'post', path: '/playlist/removeTrack', summary: '从歌单移除歌曲', tag: 'playlist', response: 'MutationSuccess', bodySchema: playlistTrackBody, requiresStateful: true,
     run: ({ adapter }, request) => callAdapter(adapter, 'removeTrack', [bodyString(request, 'playlistId'), bodyString(request, 'trackId')], 'playlistMutation')
   },
   {
-    method: 'post', path: '/playlist/favorite', summary: '收藏或取消收藏歌单', tag: 'playlist', response: 'MutationStatus', bodySchema: favoriteBody('歌单'),
+    method: 'post', path: '/playlist/favorite', summary: '收藏或取消收藏歌单', tag: 'playlist', response: 'MutationStatus', bodySchema: favoriteBody('歌单'), requiresStateful: true,
     run: ({ adapter }, request) => callAdapter(adapter, 'favoritePlaylist', [bodyString(request, 'id'), request.body.status], 'playlistFavorite')
   },
   {
@@ -215,7 +221,7 @@ export const wowRoutes: WowRouteDefinition[] = [
     run: ({ adapter }, request) => callAdapter(adapter, 'getTrackLyric', [stringValue(request.query.id, 'id')], 'lyrics')
   },
   {
-    method: 'post', path: '/track/favorite', summary: '收藏或取消收藏歌曲', tag: 'track', response: 'MutationStatus', bodySchema: favoriteBody('歌曲'),
+    method: 'post', path: '/track/favorite', summary: '收藏或取消收藏歌曲', tag: 'track', response: 'MutationStatus', bodySchema: favoriteBody('歌曲'), requiresStateful: true,
     run: ({ adapter }, request) => callAdapter(adapter, 'favoriteTrack', [bodyString(request, 'id'), request.body.status], 'trackFavorite')
   },
   simpleGet('/track/daily', '获取每日推荐歌曲', 'discovery', 'Track', 'getDailyTracks', 'dailyTracks', true),
@@ -263,7 +269,7 @@ export const wowRoutes: WowRouteDefinition[] = [
       stringValue(request.query.id, 'id'), integerValue(request.query.trackLimit, 'trackLimit', -1, -1, 1000)
     ], 'albumDetail')
   },
-  simpleGet('/user/playlist/list', '获取当前账号歌单', 'user', 'Playlist', 'getUserPlaylist', 'playlists', true),
-  simpleGet('/user/favorite/tracks', '获取当前账号收藏歌曲', 'user', 'Track', 'userFavoriteTracks', 'favoriteTracks', true),
-  simpleGet('/user/me', '获取当前账号资料', 'user', 'UserProfile', 'getUserMe', 'user')
+  simpleGet('/user/playlist/list', '获取当前账号歌单', 'user', 'Playlist', 'getUserPlaylist', 'playlists', true, true),
+  simpleGet('/user/favorite/tracks', '获取当前账号收藏歌曲', 'user', 'Track', 'userFavoriteTracks', 'favoriteTracks', true, true),
+  simpleGet('/user/me', '获取当前账号资料', 'user', 'UserProfile', 'getUserMe', 'user', false, true)
 ];

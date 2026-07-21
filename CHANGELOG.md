@@ -1,5 +1,11 @@
 # aduoer-wow-sdk
 
+## 0.1.2
+
+### Patch Changes
+
+- 在状态响应中增加默认开启的 `stateless` 标识，并统一限制无状态源的用户资料、歌单和收藏接口。
+
 ## 0.1.1
 
 ### Patch Changes

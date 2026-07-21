@@ -59,6 +59,7 @@ export interface WowRequestContext {
   adapter: WowAdapter;
   qualityMap?: QualityOption[];
   accountName?: string;
+  stateless?: boolean;
 }
 
 export interface ResolveContextInput {
@@ -88,12 +89,24 @@ const capabilityMethods = {
   albumDetail: ['getAlbumDetail'],
   trackFavorite: ['favoriteTrack'],
   favoriteTracks: ['userFavoriteTracks'],
+  userPlaylists: ['getUserPlaylist'],
+  userProfile: ['getUserMe'],
   personalFM: ['getPersonalFM'],
   dailyTracks: ['getDailyTracks']
 } as const;
 
-export function inferCapabilities(adapter: WowAdapter): string[] {
+const statefulCapabilities = new Set([
+  'playlistMutation',
+  'playlistFavorite',
+  'trackFavorite',
+  'favoriteTracks',
+  'userPlaylists',
+  'userProfile'
+]);
+
+export function inferCapabilities(adapter: WowAdapter, stateless = false): string[] {
   return Object.entries(capabilityMethods)
     .filter(([, methods]) => methods.every((method) => typeof adapter[method as keyof WowAdapter] === 'function'))
+    .filter(([capability]) => !stateless || !statefulCapabilities.has(capability))
     .map(([capability]) => capability);
 }

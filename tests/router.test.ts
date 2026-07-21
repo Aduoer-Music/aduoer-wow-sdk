@@ -19,11 +19,11 @@ const track: Track = {
   qualities: []
 };
 
-function createApp(adapter: WowAdapter, token = 'test-token') {
+function createApp(adapter: WowAdapter, token = 'test-token', stateless?: boolean) {
   const app = express();
   app.use(express.json());
   app.use(createWowRouter({
-    resolveContext: ({ authorization }) => authorization === token ? { adapter } : null,
+    resolveContext: ({ authorization }) => authorization === token ? { adapter, stateless } : null,
     validateResponses: true
   }));
   return app;
@@ -53,6 +53,7 @@ describe('createWowRouter', () => {
       data: {
         type: 'wow',
         version: sdkVersion,
+        stateless: true,
         capabilities: ['songDetail'],
         qualityMap: []
       }
@@ -80,6 +81,43 @@ describe('createWowRouter', () => {
 
     expect(response.body.code).toBe(501);
     expect(response.body.data).toBeNull();
+  });
+
+  it('无状态源拒绝用户数据接口且过滤相关能力', async () => {
+    const adapter: WowAdapter = {
+      getUserPlaylist: async () => [],
+      favoriteTrack: async (_id, status) => ({ success: true, status })
+    };
+    const app = createApp(adapter);
+
+    const status = await request(app)
+      .get('/v1/status')
+      .set('Authorization', 'test-token')
+      .expect(200);
+    expect(status.body.data.stateless).toBe(true);
+    expect(status.body.data.capabilities).not.toContain('trackFavorite');
+    expect(status.body.data.capabilities).not.toContain('userPlaylists');
+
+    await request(app)
+      .get('/v1/user/playlist/list')
+      .set('Authorization', 'test-token')
+      .expect(501);
+  });
+
+  it('有状态源保留用户数据接口', async () => {
+    const app = createApp({ getUserPlaylist: async () => [] }, 'test-token', false);
+
+    const status = await request(app)
+      .get('/v1/status')
+      .set('Authorization', 'test-token')
+      .expect(200);
+    expect(status.body.data.stateless).toBe(false);
+    expect(status.body.data.capabilities).toContain('userPlaylists');
+
+    await request(app)
+      .get('/v1/user/playlist/list')
+      .set('Authorization', 'test-token')
+      .expect(200);
   });
 
   it('校验 Adapter 响应', async () => {
@@ -136,6 +174,7 @@ describe('OpenAPI contract', () => {
     expect(openApiDocument.components.schemas).toHaveProperty('ToplistTrackSummary');
     expect(openApiDocument.components.schemas).not.toHaveProperty('ToplistTrackPreview');
     expect(openApiDocument.components.schemas.Status.properties).toHaveProperty('version');
+    expect(openApiDocument.components.schemas.Status.properties).toHaveProperty('stateless');
     expect(openApiDocument.components.schemas.Status.properties).not.toHaveProperty('apiVersion');
   });
 

@@ -2,7 +2,7 @@ import express, { type NextFunction, type Request, type Response, type Router } 
 import { Type } from '@sinclair/typebox';
 import { Value } from '@sinclair/typebox/value';
 import type { ResolveWowContext, WowRequestContext } from './adapter';
-import { UnauthorizedError, WowError } from './errors';
+import { UnauthorizedError, UnsupportedFeatureError, WowError } from './errors';
 import { schemas } from './schemas';
 import { wowRoutes } from './routes';
 
@@ -51,6 +51,10 @@ export function createWowRouter(options: CreateWowRouterOptions): Router {
       try {
         if (definition.bodySchema && !Value.Check(definition.bodySchema, request.body)) {
           throw new WowError(`Invalid request body: ${validationMessage(definition.bodySchema, request.body)}`, 400);
+        }
+
+        if (definition.requiresStateful && (request.wowContext?.stateless ?? true)) {
+          throw new UnsupportedFeatureError('statefulUserData');
         }
 
         const data = await definition.run(request.wowContext!, request);

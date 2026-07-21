@@ -72,6 +72,32 @@ describe('createWowRouter', () => {
     expect(response.body.data).not.toHaveProperty('apiVersion');
   });
 
+  it('相似歌曲能力和路由由同一个 Adapter 方法提供', async () => {
+    const adapter: WowAdapter = {
+      getSimilarTracks: async (id) => [{ ...track, id: `${id}-similar` }]
+    };
+    const app = createApp(adapter);
+
+    const status = await request(app)
+      .get('/v1/status')
+      .set('Authorization', 'test-token')
+      .expect(200);
+    expect(status.body.data.capabilities).toContain('similarTracks');
+
+    const response = await request(app)
+      .get('/v1/track/similar?id=track-1')
+      .set('Authorization', 'test-token')
+      .expect(200);
+    expect(response.body.data).toEqual([{ ...track, id: 'track-1-similar' }]);
+  });
+
+  it('相似歌曲接口要求提供歌曲 id', async () => {
+    await request(createApp({ getSimilarTracks: async () => [] }))
+      .get('/v1/track/similar')
+      .set('Authorization', 'test-token')
+      .expect(400);
+  });
+
   it('缺少 Authorization 返回规范化 401', async () => {
     const response = await request(createApp({}))
       .get('/v1/status')
@@ -177,6 +203,7 @@ describe('OpenAPI contract', () => {
     expect(openApiDocument.info.version).toBe(sdkVersion);
     expect(openApiDocument.paths).toHaveProperty('/v1/status');
     expect(openApiDocument.paths).toHaveProperty('/v1/track/lyric');
+    expect(openApiDocument.paths).toHaveProperty('/v1/track/similar');
     expect(openApiDocument.paths).toHaveProperty('/v1/playlist/favorite');
     expect(openApiDocument.components.schemas).toHaveProperty('TrackUrl');
     expect(openApiDocument.components.schemas).not.toHaveProperty('Audio');

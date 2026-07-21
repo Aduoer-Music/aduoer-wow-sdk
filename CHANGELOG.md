@@ -1,5 +1,12 @@
 # aduoer-wow-sdk
 
+## 0.1.3
+
+### Patch Changes
+
+- 6fd1d2d: 修正直接调用能力推断时的默认无状态行为，避免暴露用户数据能力。
+- 新增 `/v1/track/similar?id=` 相似歌曲接口、Adapter 方法和能力声明。
+
 ## 0.1.2
 
 ### Patch Changes

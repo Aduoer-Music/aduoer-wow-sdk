@@ -208,6 +208,10 @@ export const wowRoutes: WowRouteDefinition[] = [
     run: ({ adapter }, request) => callAdapter(adapter, 'getTrackDetail', [stringValue(request.query.id, 'id')], 'songDetail')
   },
   {
+    method: 'get', path: '/track/similar', summary: '获取相似歌曲', tag: 'track', response: 'Track', responseArray: true, parameters: [idParam('歌曲')],
+    run: ({ adapter }, request) => callAdapter(adapter, 'getSimilarTracks', [stringValue(request.query.id, 'id')], 'similarTracks')
+  },
+  {
     method: 'get', path: '/track/url', summary: '获取歌曲播放地址', tag: 'track', response: 'TrackUrl',
     parameters: [idParam('歌曲'), { name: 'quality', in: 'query', description: '期望获取的音质标识，可从状态接口的 qualityMap 获取。', schema: { type: 'string' } }],
     run: ({ adapter, qualityMap }, request) => {

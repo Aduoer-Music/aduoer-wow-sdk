@@ -36,6 +36,7 @@ export interface WowAdapter {
   removeTrack?(playlistId: string, trackId: string): Promise<MutationSuccess>;
   favoritePlaylist?(id: string, status: boolean): Promise<MutationStatus>;
   getTrackDetail?(id: string): Promise<Track>;
+  getSimilarTracks?(id: string): Promise<Track[]>;
   getTrackUrl?(id: string, quality?: string): Promise<TrackUrl>;
   getTrackLyric?(id: string): Promise<TrackLyrics>;
   favoriteTrack?(id: string, status: boolean): Promise<MutationStatus>;
@@ -81,6 +82,7 @@ const capabilityMethods = {
   newTracks: ['getNewTracks'],
   topArtists: ['getTopArtists'],
   songDetail: ['getTrackDetail'],
+  similarTracks: ['getSimilarTracks'],
   songUrl: ['getTrackUrl'],
   lyrics: ['getTrackLyric'],
   streaming: ['getTrackUrl'],

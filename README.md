@@ -51,4 +51,8 @@ app.listen(3000);
 
 `qualityMap` 会通过 `GET /v1/status` 返回，同时用于校验获取歌曲地址时传入的 `quality` 参数。
 
-完整教程与 Scalar API Reference 位于 [aduoer-wow-template](https://github.com/Aduoer-Music/aduoer-wow-template)。
+完整教程与 Scalar API Reference 位于 [Aduoer 开发文档](https://aduoer-music.github.io/aduoer-docs/development/)。
+
+## OpenAPI 文档
+
+SDK 在构建时从 TypeBox Schema 生成 `openapi.json`。每次 `main` 分支更新后，GitHub Actions 会更新 [`openapi-latest` Release](https://github.com/Aduoer-Music/aduoer-wow-sdk/releases/tag/openapi-latest) 中的 `openapi.json`，供文档站构建时下载。

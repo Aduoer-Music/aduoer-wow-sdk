@@ -98,6 +98,29 @@ describe('createWowRouter', () => {
       .expect(400);
   });
 
+  it('歌词接口统一返回复数命名的三字段结构', async () => {
+    const lyrics = {
+      lyrics: '[00:01.00]Original',
+      wordLyrics: '[1000,1000]Original(1000,1000)',
+      translatedLyrics: '[00:01.00]翻译'
+    };
+    const response = await request(createApp({ getTrackLyrics: async () => lyrics }))
+      .get('/v1/track/lyrics?id=track-1')
+      .set('Authorization', 'test-token')
+      .expect(200);
+
+    expect(response.body.data).toEqual(lyrics);
+  });
+
+  it('旧歌词地址保留查询参数并永久重定向到新地址', async () => {
+    const response = await request(createApp({}))
+      .get('/v1/track/lyric?id=track-1')
+      .set('Authorization', 'test-token')
+      .expect(308);
+
+    expect(response.headers.location).toBe('/v1/track/lyrics?id=track-1');
+  });
+
   it('缺少 Authorization 返回规范化 401', async () => {
     const response = await request(createApp({}))
       .get('/v1/status')
@@ -199,15 +222,25 @@ describe('createWowRouter', () => {
 
 describe('OpenAPI contract', () => {
   it('由同一路由表生成 paths 和 SDK 版本', () => {
+    const document = openApiDocument as any;
+
     expect(openApiDocument.openapi).toBe('3.1.0');
     expect(openApiDocument.info.version).toBe(sdkVersion);
     expect(openApiDocument.paths).toHaveProperty('/v1/status');
+    expect(openApiDocument.paths).toHaveProperty('/v1/track/lyrics');
     expect(openApiDocument.paths).toHaveProperty('/v1/track/lyric');
+    expect(document.paths['/v1/track/lyric'].get.deprecated).toBe(true);
+    expect(document.paths['/v1/track/lyric'].get.responses).toHaveProperty('308');
     expect(openApiDocument.paths).toHaveProperty('/v1/track/similar');
     expect(openApiDocument.paths).toHaveProperty('/v1/playlist/favorite');
     expect(openApiDocument.components.schemas).toHaveProperty('TrackUrl');
     expect(openApiDocument.components.schemas).not.toHaveProperty('Audio');
     expect(openApiDocument.components.schemas).toHaveProperty('TrackLyrics');
+    expect(openApiDocument.components.schemas.TrackLyrics.required).toEqual([
+      'lyrics',
+      'wordLyrics',
+      'translatedLyrics'
+    ]);
     expect(openApiDocument.components.schemas).not.toHaveProperty('PlaybackLyrics');
     expect(openApiDocument.components.schemas).toHaveProperty('ToplistTrackSummary');
     expect(openApiDocument.components.schemas).not.toHaveProperty('ToplistTrackPreview');

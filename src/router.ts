@@ -4,7 +4,7 @@ import { Value } from '@sinclair/typebox/value';
 import type { ResolveWowContext, WowRequestContext } from './adapter';
 import { UnauthorizedError, UnsupportedFeatureError, WowError } from './errors';
 import { schemas } from './schemas';
-import { wowRoutes } from './routes';
+import { wowRedirects, wowRoutes } from './routes';
 
 const V1_PREFIX = '/v1';
 
@@ -45,6 +45,14 @@ export function createWowRouter(options: CreateWowRouterOptions): Router {
       next(error);
     }
   });
+
+  for (const definition of wowRedirects) {
+    v1Router[definition.method](definition.path, (request, response) => {
+      const queryIndex = request.originalUrl.indexOf('?');
+      const query = queryIndex >= 0 ? request.originalUrl.slice(queryIndex) : '';
+      response.redirect(308, `${V1_PREFIX}${definition.target}${query}`);
+    });
+  }
 
   for (const definition of wowRoutes) {
     v1Router[definition.method](definition.path, async (request, response, next) => {

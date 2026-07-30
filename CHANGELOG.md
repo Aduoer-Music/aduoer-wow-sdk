@@ -1,5 +1,11 @@
 # aduoer-wow-sdk
 
+## 0.1.4
+
+### Patch Changes
+
+- 统一歌词响应字段为 `lyrics`、`wordLyrics` 和 `translatedLyrics`，翻译歌词不再区分逐行与逐字格式。新增 `/v1/track/lyrics` 和 `getTrackLyrics`，旧 `/v1/track/lyric` 保留为永久重定向兼容入口。
+
 ## 0.1.3
 
 ### Patch Changes

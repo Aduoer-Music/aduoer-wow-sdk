@@ -28,6 +28,15 @@ export interface WowRouteDefinition {
   run(context: WowRequestContext, request: Request): Promise<unknown>;
 }
 
+export interface WowRedirectDefinition {
+  method: 'get';
+  path: string;
+  target: string;
+  summary: string;
+  tag: string;
+  parameters?: ParameterSpec[];
+}
+
 const paginationParams: ParameterSpec[] = [
   { name: 'offset', in: 'query', description: '相对于结果集起点的偏移量，从 0 开始。', schema: { type: 'integer', minimum: 0, default: 0 } },
   { name: 'limit', in: 'query', description: '本次请求期望返回的最大数量；具体上限由接口决定。', schema: { type: 'integer', minimum: 1, default: 20 } }
@@ -221,8 +230,8 @@ export const wowRoutes: WowRouteDefinition[] = [
     }
   },
   {
-    method: 'get', path: '/track/lyric', summary: '获取歌曲歌词', tag: 'track', response: 'TrackLyrics', parameters: [idParam('歌曲')],
-    run: ({ adapter }, request) => callAdapter(adapter, 'getTrackLyric', [stringValue(request.query.id, 'id')], 'lyrics')
+    method: 'get', path: '/track/lyrics', summary: '获取歌曲歌词', tag: 'track', response: 'TrackLyrics', parameters: [idParam('歌曲')],
+    run: ({ adapter }, request) => callAdapter(adapter, 'getTrackLyrics', [stringValue(request.query.id, 'id')], 'lyrics')
   },
   {
     method: 'post', path: '/track/favorite', summary: '收藏或取消收藏歌曲', tag: 'track', response: 'MutationStatus', bodySchema: favoriteBody('歌曲'), requiresStateful: true,
@@ -276,4 +285,15 @@ export const wowRoutes: WowRouteDefinition[] = [
   simpleGet('/user/playlist/list', '获取当前账号歌单', 'user', 'Playlist', 'getUserPlaylist', 'playlists', true, true),
   simpleGet('/user/favorite/tracks', '获取当前账号收藏歌曲', 'user', 'Track', 'userFavoriteTracks', 'favoriteTracks', true, true),
   simpleGet('/user/me', '获取当前账号资料', 'user', 'UserProfile', 'getUserMe', 'user', false, true)
+];
+
+export const wowRedirects: WowRedirectDefinition[] = [
+  {
+    method: 'get',
+    path: '/track/lyric',
+    target: '/track/lyrics',
+    summary: '兼容旧版歌曲歌词地址',
+    tag: 'track',
+    parameters: [idParam('歌曲')]
+  }
 ];

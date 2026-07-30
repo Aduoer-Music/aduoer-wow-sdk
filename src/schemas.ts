@@ -116,10 +116,9 @@ export const TrackUrlScheme = Type.Object({
 }, { $id: 'TrackUrl', description: '歌曲播放地址及其音频信息。', additionalProperties: false });
 
 export const TrackLyricsSchema = Type.Object({
-  lyric: Type.String({ description: '逐行原文歌词；没有内容时为空字符串。' }),
-  wordLyric: Type.String({ description: '逐字原文歌词；没有内容时为空字符串。' }),
-  translateLyric: Type.String({ description: '逐行翻译歌词；没有内容时为空字符串。' }),
-  translateWordLyric: Type.String({ description: '逐字翻译歌词；没有内容时为空字符串。' })
+  lyrics: Type.String({ description: '逐行原文歌词；没有内容时为空字符串。' }),
+  wordLyrics: Type.String({ description: '逐字原文歌词；没有内容时为空字符串。' }),
+  translatedLyrics: Type.String({ description: '翻译歌词；没有内容时为空字符串。' })
 }, { $id: 'TrackLyrics', description: '歌曲的逐行、逐字及翻译歌词。', additionalProperties: false });
 
 export const ArtistDetailSchema = Type.Object({

@@ -38,7 +38,7 @@ export interface WowAdapter {
   getTrackDetail?(id: string): Promise<Track>;
   getSimilarTracks?(id: string): Promise<Track[]>;
   getTrackUrl?(id: string, quality?: string): Promise<TrackUrl>;
-  getTrackLyric?(id: string): Promise<TrackLyrics>;
+  getTrackLyrics?(id: string): Promise<TrackLyrics>;
   favoriteTrack?(id: string, status: boolean): Promise<MutationStatus>;
   getDailyTracks?(): Promise<Track[]>;
   getPersonalFM?(): Promise<Track[]>;
@@ -84,7 +84,7 @@ const capabilityMethods = {
   songDetail: ['getTrackDetail'],
   similarTracks: ['getSimilarTracks'],
   songUrl: ['getTrackUrl'],
-  lyrics: ['getTrackLyric'],
+  lyrics: ['getTrackLyrics'],
   streaming: ['getTrackUrl'],
   search: ['searchTracks', 'searchArtists', 'searchAlbums', 'searchPlaylists'],
   artistDetail: ['getArtistDetail'],

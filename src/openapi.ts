@@ -1,5 +1,5 @@
 import { schemas } from './schemas';
-import { wowRoutes } from './routes';
+import { wowRedirects, wowRoutes } from './routes';
 import { sdkVersion } from './version';
 
 function schemaDescription(name: keyof typeof schemas): string {
@@ -36,7 +36,7 @@ function successResponse(name: keyof typeof schemas, array = false, summary: str
   };
 }
 
-const paths = Object.fromEntries(wowRoutes.map((route) => [
+const routePaths = Object.fromEntries(wowRoutes.map((route) => [
   `/v1${route.path}`,
   {
     [route.method]: {
@@ -62,6 +62,34 @@ const paths = Object.fromEntries(wowRoutes.map((route) => [
     }
   }
 ]));
+
+const redirectPaths = Object.fromEntries(wowRedirects.map((route) => [
+  `/v1${route.path}`,
+  {
+    [route.method]: {
+      tags: [route.tag],
+      summary: route.summary,
+      description: `${route.summary}；保留查询参数并永久重定向到 /v1${route.target}。`,
+      deprecated: true,
+      security: [{ ApiKeyAuth: [] }],
+      parameters: route.parameters ?? [],
+      responses: {
+        308: {
+          description: `永久重定向到 /v1${route.target}。`,
+          headers: {
+            Location: {
+              description: '新的歌词接口地址，保留原请求的查询参数。',
+              schema: { type: 'string' }
+            }
+          }
+        },
+        401: { $ref: '#/components/responses/Unauthorized' }
+      }
+    }
+  }
+]));
+
+const paths = { ...routePaths, ...redirectPaths };
 
 const errorResponse = (description: string) => ({
   description,

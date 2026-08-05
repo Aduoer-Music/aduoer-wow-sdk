@@ -51,7 +51,7 @@ app.listen(3000);
 
 `qualityMap` 会通过 `GET /v1/status` 返回，同时用于校验获取歌曲地址时传入的 `quality` 参数。
 
-完整教程与 Scalar API Reference 位于 [Aduoer 开发文档](https://aduoer-music.github.io/aduoer-docs/development/)。
+完整教程与 Scalar API Reference 位于 [Aduoer 开发文档](https://aduoer-music.github.io/docs/development/)。
 
 ## OpenAPI 文档
 

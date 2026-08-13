@@ -144,7 +144,6 @@ export const UserProfileSchema = Type.Object({
   userId: Type.String({ description: '当前账号在音乐平台中的用户标识。' }),
   nickname: Type.String({ description: '当前账号昵称。' }),
   avatar: Type.String({ description: '当前账号头像地址。' }),
-  isVip: Type.Boolean({ description: '当前账号是否具有会员权益。' }),
   platform: Type.String({ description: '当前账号所属音乐平台标识。' })
 }, { $id: 'UserProfile', description: '当前认证账号的资料。', additionalProperties: false });
 

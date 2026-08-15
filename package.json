@@ -1,6 +1,6 @@
 {
   "name": "aduoer-wow-sdk",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "OpenAPI-first SDK for building Aduoer Wow music origins",
   "license": "MIT",
   "type": "commonjs",

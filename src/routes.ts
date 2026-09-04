@@ -238,7 +238,7 @@ export const wowRoutes: WowRouteDefinition[] = [
     run: ({ adapter }, request) => callAdapter(adapter, 'favoriteTrack', [bodyString(request, 'id'), request.body.status], 'trackFavorite')
   },
   simpleGet('/track/daily', '获取每日推荐歌曲', 'discovery', 'Track', 'getDailyTracks', 'dailyTracks', true),
-  simpleGet('/track/fm', '获取私人 FM 歌曲', 'discovery', 'Track', 'getPersonalFM', 'personalFM', true),
+  simpleGet('/track/roam', '获取歌曲漫游歌曲', 'discovery', 'Track', 'getTrackRoam', 'trackRoam', true),
   {
     method: 'get', path: '/search/suggest', summary: '获取搜索建议', tag: 'search', response: 'SearchSuggest', parameters: [keywordParam],
     run: ({ adapter }, request) => callAdapter(adapter, 'searchSuggest', [stringValue(request.query.keyword, 'keyword')], 'search')
@@ -288,6 +288,13 @@ export const wowRoutes: WowRouteDefinition[] = [
 ];
 
 export const wowRedirects: WowRedirectDefinition[] = [
+  {
+    method: 'get',
+    path: '/track/fm',
+    target: '/track/roam',
+    summary: '兼容旧版歌曲漫游地址',
+    tag: 'discovery'
+  },
   {
     method: 'get',
     path: '/track/lyric',

@@ -1,5 +1,12 @@
 # aduoer-wow-sdk
 
+## 0.2.0
+
+### Minor Changes
+
+- dcaf7a3: 移除用户资料响应中的 VIP 字段，会员展示由 Aduoer App 自身的 Pro 订阅状态决定。
+- 歌曲漫游升级：新增 `/v1/track/roam` 和 `getTrackRoam`，能力名为 `trackRoam`，旧 `/v1/track/fm` 保留为永久重定向。
+
 ## 0.1.4
 
 ### Patch Changes

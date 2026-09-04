@@ -78,7 +78,7 @@ const redirectPaths = Object.fromEntries(wowRedirects.map((route) => [
           description: `永久重定向到 /v1${route.target}。`,
           headers: {
             Location: {
-              description: '新的歌词接口地址，保留原请求的查询参数。',
+              description: '新接口地址，保留原请求的查询参数。',
               schema: { type: 'string' }
             }
           }

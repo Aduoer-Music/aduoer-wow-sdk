@@ -98,6 +98,34 @@ describe('createWowRouter', () => {
       .expect(400);
   });
 
+  it('歌曲漫游能力和路由由同一个 Adapter 方法提供', async () => {
+    const adapter: WowAdapter = {
+      getTrackRoam: async () => [track]
+    };
+    const app = createApp(adapter);
+
+    const status = await request(app)
+      .get('/v1/status')
+      .set('Authorization', 'test-token')
+      .expect(200);
+    expect(status.body.data.capabilities).toContain('trackRoam');
+
+    const response = await request(app)
+      .get('/v1/track/roam')
+      .set('Authorization', 'test-token')
+      .expect(200);
+    expect(response.body.data).toEqual([track]);
+  });
+
+  it('旧版歌曲漫游地址永久重定向到新地址', async () => {
+    const response = await request(createApp({}))
+      .get('/v1/track/fm')
+      .set('Authorization', 'test-token')
+      .expect(308);
+
+    expect(response.headers.location).toBe('/v1/track/roam');
+  });
+
   it('歌词接口统一返回复数命名的三字段结构', async () => {
     const lyrics = {
       lyrics: '[00:01.00]Original',
@@ -232,6 +260,10 @@ describe('OpenAPI contract', () => {
     expect(document.paths['/v1/track/lyric'].get.deprecated).toBe(true);
     expect(document.paths['/v1/track/lyric'].get.responses).toHaveProperty('308');
     expect(openApiDocument.paths).toHaveProperty('/v1/track/similar');
+    expect(openApiDocument.paths).toHaveProperty('/v1/track/roam');
+    expect(openApiDocument.paths).toHaveProperty('/v1/track/fm');
+    expect(document.paths['/v1/track/fm'].get.deprecated).toBe(true);
+    expect(document.paths['/v1/track/fm'].get.responses).toHaveProperty('308');
     expect(openApiDocument.paths).toHaveProperty('/v1/playlist/favorite');
     expect(openApiDocument.components.schemas).toHaveProperty('TrackUrl');
     expect(openApiDocument.components.schemas).not.toHaveProperty('Audio');

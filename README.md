@@ -56,7 +56,7 @@ app.listen(3000);
 
 `qualityMap` 会通过 `GET /v1/status` 返回，同时用于校验获取歌曲地址时传入的 `quality` 参数。
 
-`playlistSortOptions` 也由 `GET /v1/status` 返回。客户端只在用户选择排序时调用 `GET /v1/playlist/detail?sort=<key>&order=asc|desc`；默认顺序不传这两个参数。`getPlaylistDetail(id, trackLimit, sort, order)` 从 SDK 接收这两个可选参数，源应在取数时完成排序。
+`playlistSortOptions` 也由 `GET /v1/status` 返回。客户端在来源提供排序选项时默认选择首项，并调用 `GET /v1/playlist/detail?sort=<key>&order=asc|desc`；没有排序选项时不传这两个参数。`getPlaylistDetail(id, trackLimit, sort, order)` 从 SDK 接收这两个可选参数，源应在取数时完成排序。
 
 完整教程与 Scalar API Reference 位于 [Aduoer 开发文档](https://aduoer-music.github.io/docs/development/)。
 

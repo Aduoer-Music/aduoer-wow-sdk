@@ -9,12 +9,18 @@ export const QualityOptionSchema = Type.Object({
   label: Type.String({ description: '面向用户展示的音质名称。' })
 }, { $id: 'QualityOption', description: '音乐源支持的音质选项。', additionalProperties: false });
 
+export const PlaylistSortOptionSchema = Type.Object({
+  key: Type.String({ description: '歌单歌曲排序标识，作为 sort 参数值。' }),
+  label: Type.String({ description: '面向用户展示的排序名称。' })
+}, { $id: 'PlaylistSortOption', description: '音乐源支持的歌单歌曲排序选项。', additionalProperties: false });
+
 export const StatusSchema = Type.Object({
   type: Type.Literal('wow', { description: '协议类型，固定为 wow。' }),
   version: Type.String({ minLength: 1, description: '当前服务使用的 aduoer-wow-sdk SemVer。' }),
   stateless: Type.Boolean({ default: true, description: '是否为无状态服务；true 表示用户数据应由客户端本地维护。' }),
   capabilities: Type.Array(Type.String(), { description: '当前 Adapter 已实现的能力标识列表。' }),
-  qualityMap: Type.Optional(Type.Array(QualityOptionSchema, { description: '当前音乐源支持的音质选项；未配置时返回空数组。' }))
+  qualityMap: Type.Optional(Type.Array(QualityOptionSchema, { description: '当前音乐源支持的音质选项；未配置时返回空数组。' })),
+  playlistSortOptions: Type.Optional(Type.Array(PlaylistSortOptionSchema, { description: '歌单歌曲排序选项；未配置时返回空数组。' }))
 }, { $id: 'Status', description: 'Wow 音乐源的运行状态与能力信息。', additionalProperties: false });
 
 export const ArtistSchema = Type.Object({
@@ -183,6 +189,7 @@ export const schemas = {
   ApiResponse: ApiResponseSchema,
   ErrorResponse: ErrorResponseSchema,
   QualityOption: QualityOptionSchema,
+  PlaylistSortOption: PlaylistSortOptionSchema,
   Status: StatusSchema,
   Artist: ArtistSchema,
   Album: AlbumSchema,
@@ -210,6 +217,7 @@ export const schemas = {
 } as const;
 
 export type QualityOption = Static<typeof QualityOptionSchema>;
+export type PlaylistSortOption = Static<typeof PlaylistSortOptionSchema>;
 export type Status = Static<typeof StatusSchema>;
 export type Artist = Static<typeof ArtistSchema>;
 export type Album = Static<typeof AlbumSchema>;

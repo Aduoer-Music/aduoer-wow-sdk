@@ -11,6 +11,7 @@ import type {
   PlaylistDetail,
   PlaylistPage,
   QualityOption,
+  PlaylistSortOption,
   SearchSuggest,
   ToplistGroup,
   Track,
@@ -28,7 +29,7 @@ export interface WowAdapter {
   getNewTracks?(): Promise<Track[]>;
   getTopArtists?(): Promise<ArtistPage['items']>;
   getRecommendedPlaylist?(offset: number, limit: number): Promise<PlaylistPage>;
-  getPlaylistDetail?(id: string, trackLimit?: number): Promise<PlaylistDetail>;
+  getPlaylistDetail?(id: string, trackLimit?: number, sort?: string, order?: 'asc' | 'desc'): Promise<PlaylistDetail>;
   createPlaylist?(name: string): Promise<Playlist>;
   deletePlaylist?(id: string): Promise<MutationSuccess>;
   updatePlaylist?(id: string, name: string, description: string): Promise<Playlist>;
@@ -59,6 +60,7 @@ export interface WowAdapter {
 export interface WowRequestContext {
   adapter: WowAdapter;
   qualityMap?: QualityOption[];
+  playlistSortOptions?: PlaylistSortOption[];
   accountName?: string;
   stateless?: boolean;
 }

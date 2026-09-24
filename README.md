@@ -38,6 +38,11 @@ app.use(createWowRouter({
       qualityMap: [
         { key: 'standard', label: '标准音质' },
         { key: 'lossless', label: '无损音质' }
+      ],
+      // 仅声明目标服务真实支持的歌单歌曲排序。
+      playlistSortOptions: [
+        { key: 'title', label: 'Track' },
+        { key: 'artist', label: '艺人' }
       ]
     };
   }
@@ -50,6 +55,8 @@ app.listen(3000);
 `GET /v1/status` 的 `data.version` 始终来自 SDK 自身版本。能力列表根据 Adapter 已实现的方法自动生成。
 
 `qualityMap` 会通过 `GET /v1/status` 返回，同时用于校验获取歌曲地址时传入的 `quality` 参数。
+
+`playlistSortOptions` 也由 `GET /v1/status` 返回。客户端只在用户选择排序时调用 `GET /v1/playlist/detail?sort=<key>&order=asc|desc`；默认顺序不传这两个参数。`getPlaylistDetail(id, trackLimit, sort, order)` 从 SDK 接收这两个可选参数，源应在取数时完成排序。
 
 完整教程与 Scalar API Reference 位于 [Aduoer 开发文档](https://aduoer-music.github.io/docs/development/)。
 

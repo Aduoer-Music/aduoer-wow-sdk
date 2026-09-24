@@ -141,14 +141,15 @@ function simpleGet(
 export const wowRoutes: WowRouteDefinition[] = [
   {
     method: 'get', path: '/status', summary: '获取 Wow 源状态、SDK 版本、能力和音质选项', tag: 'status', response: 'Status',
-    run: async ({ adapter, qualityMap, stateless }) => {
+    run: async ({ adapter, qualityMap, playlistSortOptions, stateless }) => {
       const resolvedStateless = stateless ?? true;
       return {
         type: 'wow',
         version: sdkVersion,
         stateless: resolvedStateless,
         capabilities: (await import('./adapter')).inferCapabilities(adapter, resolvedStateless),
-        qualityMap: qualityMap ?? []
+        qualityMap: qualityMap ?? [],
+        playlistSortOptions: playlistSortOptions ?? []
       };
     }
   },
@@ -180,11 +181,23 @@ export const wowRoutes: WowRouteDefinition[] = [
     }
   },
   {
-    method: 'get', path: '/playlist/detail', summary: '获取歌单详情', tag: 'playlist', response: 'PlaylistDetail', parameters: [idParam('歌单'), trackLimitParam],
-    run: ({ adapter }, request) => callAdapter(adapter, 'getPlaylistDetail', [
-      stringValue(request.query.id, 'id'),
-      integerValue(request.query.trackLimit, 'trackLimit', -1, -1, 1000)
-    ], 'playlists')
+    method: 'get', path: '/playlist/detail', summary: '获取歌单详情', tag: 'playlist', response: 'PlaylistDetail', parameters: [
+      idParam('歌单'), trackLimitParam,
+      { name: 'sort', in: 'query', description: '排序标识，可从状态接口的 playlistSortOptions 获取。', schema: { type: 'string' } },
+      { name: 'order', in: 'query', description: '排序方向。', schema: { type: 'string', enum: ['asc', 'desc'] } }
+    ],
+    run: ({ adapter, playlistSortOptions }, request) => {
+      const sort = stringValue(request.query.sort, 'sort', false);
+      const order = stringValue(request.query.order, 'order', false);
+      if (sort && !playlistSortOptions?.some((option) => option.key === sort)) throw new BadRequestError('Unsupported sort');
+      if (order && order !== 'asc' && order !== 'desc') throw new BadRequestError('Unsupported order');
+      if (order && !sort) throw new BadRequestError('sort is required when order is set');
+      return callAdapter(adapter, 'getPlaylistDetail', [
+        stringValue(request.query.id, 'id'),
+        integerValue(request.query.trackLimit, 'trackLimit', -1, -1, 1000),
+        sort, order
+      ], 'playlists');
+    }
   },
   {
     method: 'post', path: '/playlist/create', summary: '创建歌单', tag: 'playlist', response: 'Playlist', bodySchema: nameBody, requiresStateful: true,

@@ -66,7 +66,8 @@ describe('createWowRouter', () => {
         version: sdkVersion,
         stateless: true,
         capabilities: ['songDetail'],
-        qualityMap: []
+        qualityMap: [],
+        playlistSortOptions: []
       }
     });
     expect(response.body.data).not.toHaveProperty('apiVersion');
@@ -235,6 +236,24 @@ describe('createWowRouter', () => {
       .expect(200);
 
     expect(response.body.data.tracks).toHaveLength(1);
+  });
+
+  it('歌单排序参数传给 Adapter，并拒绝未声明的选项', async () => {
+    const calls: Array<[string | undefined, string | undefined]> = [];
+    const app = express();
+    app.use(createWowRouter({ resolveContext: () => ({
+      adapter: { getPlaylistDetail: async (id, _limit, sort, order) => {
+        calls.push([sort, order]);
+        return { id, name: '示例', description: '', coverUrl: '', trackCount: 1, tracks: [track] };
+      } },
+      playlistSortOptions: [{ key: 'title', label: 'Track' }]
+    }) }));
+    const status = await request(app).get('/v1/status').expect(200);
+    expect(status.body.data.playlistSortOptions).toEqual([{ key: 'title', label: 'Track' }]);
+    await request(app).get('/v1/playlist/detail?id=p&sort=title&order=desc').expect(200);
+    expect(calls).toEqual([['title', 'desc']]);
+    await request(app).get('/v1/playlist/detail?id=p&sort=unknown').expect(400);
+    await request(app).get('/v1/playlist/detail?id=p&sort=title&order=reverse').expect(400);
   });
 
   it('校验 mutation 请求体', async () => {

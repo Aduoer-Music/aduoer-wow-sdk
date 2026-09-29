@@ -24,12 +24,14 @@ export const StatusSchema = Type.Object({
 }, { $id: 'Status', description: 'Wow 音乐源的运行状态与能力信息。', additionalProperties: false });
 
 export const ArtistSchema = Type.Object({
+  favorite: Type.Optional(Type.Boolean({ description: '当前账号是否已收藏该艺人。' })),
   id: Type.String({ description: '艺人在当前音乐平台中的唯一标识。' }),
   name: Type.String({ description: '艺人名称。' }),
   coverUrl: Type.Optional(Type.String({ description: '艺人封面图片地址。' }))
 }, { $id: 'Artist', description: '艺人的基础信息。', additionalProperties: false });
 
 export const AlbumSchema = Type.Object({
+  favorite: Type.Optional(Type.Boolean({ description: '当前账号是否已收藏该专辑。' })),
   id: Type.String({ description: '专辑在当前音乐平台中的唯一标识。' }),
   name: Type.String({ description: '专辑名称。' }),
   coverUrl: Type.String({ description: '专辑封面图片地址。' }),

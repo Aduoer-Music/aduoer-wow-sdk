@@ -1,5 +1,12 @@
 # aduoer-wow-sdk
 
+## 0.3.1
+
+### Patch Changes
+
+- 新增艺人、专辑收藏写入及当前账号收藏列表四个基础接口，不新增 capability 声明，未实现返回 HTTP 501。
+- 艺人和专辑模型新增可选 `favorite` 状态，同步 OpenAPI 和接入文档。
+
 ## 0.3.0
 
 ### Minor Changes

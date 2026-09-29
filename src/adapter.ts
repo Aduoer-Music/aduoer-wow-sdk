@@ -1,5 +1,7 @@
 import type { Request } from 'express';
 import type {
+  Album,
+  Artist,
   AlbumDetail,
   AlbumPage,
   ArtistDetail,
@@ -52,6 +54,10 @@ export interface WowAdapter {
   getArtistTracks?(id: string, order: string, offset: number, limit: number): Promise<TrackPage>;
   getArtistAlbums?(id: string, offset: number, limit: number): Promise<AlbumPage>;
   getAlbumDetail?(id: string, trackLimit?: number): Promise<AlbumDetail>;
+  favoriteArtist?(id: string, status: boolean): Promise<MutationStatus>;
+  favoriteAlbum?(id: string, status: boolean): Promise<MutationStatus>;
+  userArtists?(): Promise<Artist[]>;
+  userAlbums?(): Promise<Album[]>;
   getUserPlaylist?(): Promise<Playlist[]>;
   userFavoriteTracks?(): Promise<Track[]>;
   getUserMe?(): Promise<UserProfile>;

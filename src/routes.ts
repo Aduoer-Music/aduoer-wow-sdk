@@ -295,6 +295,16 @@ export const wowRoutes: WowRouteDefinition[] = [
       stringValue(request.query.id, 'id'), integerValue(request.query.trackLimit, 'trackLimit', -1, -1, 1000)
     ], 'albumDetail')
   },
+  {
+    method: 'post', path: '/artist/favorite', summary: '收藏或取消收藏艺人', tag: 'artist', response: 'MutationStatus', bodySchema: favoriteBody('艺人'), requiresStateful: true,
+    run: ({ adapter }, request) => callAdapter(adapter, 'favoriteArtist', [bodyString(request, 'id'), request.body.status], 'favoriteArtist')
+  },
+  {
+    method: 'post', path: '/album/favorite', summary: '收藏或取消收藏专辑', tag: 'album', response: 'MutationStatus', bodySchema: favoriteBody('专辑'), requiresStateful: true,
+    run: ({ adapter }, request) => callAdapter(adapter, 'favoriteAlbum', [bodyString(request, 'id'), request.body.status], 'favoriteAlbum')
+  },
+  simpleGet('/user/artist/list', '获取当前账号收藏艺人', 'user', 'Artist', 'userArtists', 'userArtists', true, true),
+  simpleGet('/user/album/list', '获取当前账号收藏专辑', 'user', 'Album', 'userAlbums', 'userAlbums', true, true),
   simpleGet('/user/playlist/list', '获取当前账号歌单', 'user', 'Playlist', 'getUserPlaylist', 'playlists', true, true),
   simpleGet('/user/favorite/tracks', '获取当前账号收藏歌曲', 'user', 'Track', 'userFavoriteTracks', 'favoriteTracks', true, true),
   simpleGet('/user/me', '获取当前账号资料', 'user', 'UserProfile', 'getUserMe', 'user', false, true)

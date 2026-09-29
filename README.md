@@ -63,3 +63,15 @@ app.listen(3000);
 ## OpenAPI 文档
 
 SDK 在构建时从 TypeBox Schema 生成 `openapi.json`。每次 `main` 分支更新后，GitHub Actions 会更新 [`openapi-latest` Release](https://github.com/Aduoer-Music/aduoer-wow-sdk/releases/tag/openapi-latest) 中的 `openapi.json`，供文档站构建时下载。
+
+## 艺人和专辑收藏
+
+基础接口不参与 capabilities 推断，未实现返回 HTTP 501：
+
+- `POST /v1/artist/favorite` → `favoriteArtist(id, status)`
+- `POST /v1/album/favorite` → `favoriteAlbum(id, status)`
+- `GET /v1/user/artist/list` → `userArtists(): Promise<Artist[]>`
+- `GET /v1/user/album/list` → `userAlbums(): Promise<Album[]>`
+
+写入 body 为 `{ id, status }`，返回 `MutationStatus`；查询返回当前账号的完整收藏列表。
+`Artist` 和 `Album`（包括详情）提供可选 `favorite` 状态。这些服务端路由沿用有状态用户数据规则；无状态源的收藏由客户端维护。

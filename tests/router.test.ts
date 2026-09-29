@@ -331,3 +331,47 @@ describe('OpenAPI contract', () => {
     }
   });
 });
+
+
+describe('艺人和专辑基础收藏接口', () => {
+  const artist = { id: 'artist-1', name: '艺人', favorite: true };
+  const album = { id: 'album-1', name: '专辑', coverUrl: '', favorite: true };
+  const adapter: WowAdapter = {
+    favoriteArtist: async (_id, status) => ({ success: true, status }),
+    favoriteAlbum: async (_id, status) => ({ success: true, status }),
+    userArtists: async () => [artist],
+    userAlbums: async () => [album]
+  };
+
+  it('基础收藏接口不增加能力声明', () => {
+    expect(inferCapabilities(adapter, false)).toEqual([]);
+    expect(inferCapabilities(adapter, true)).toEqual([]);
+  });
+
+  it.each(['artist', 'album'])('%s 收藏写入、取消及参数校验', async (kind) => {
+    const app = createApp(adapter, 'test-token', false);
+    for (const status of [true, false]) {
+      const response = await request(app).post(`/v1/${kind}/favorite`)
+        .set('Authorization', 'test-token').send({ id: `${kind}-1`, status }).expect(200);
+      expect(response.body.data).toEqual({ success: true, status });
+    }
+    await request(app).post(`/v1/${kind}/favorite`).set('Authorization', 'test-token')
+      .send({ id: '', status: true }).expect(400);
+    await request(app).post(`/v1/${kind}/favorite`).set('Authorization', 'test-token')
+      .send({ id: '1', status: 'true' }).expect(400);
+  });
+
+  it.each([['artist', artist], ['album', album]])('%s 列表携带收藏状态', async (kind, item) => {
+    const response = await request(createApp(adapter, 'test-token', false))
+      .get(`/v1/user/${kind}/list`).set('Authorization', 'test-token').expect(200);
+    expect(response.body.data).toEqual([item]);
+  });
+
+  it.each(['artist', 'album'])('%s 未实现或无状态服务响应不支持', async (kind) => {
+    for (const app of [createApp({}, 'test-token', false), createApp(adapter, 'test-token', true)]) {
+      await request(app).get(`/v1/user/${kind}/list`).set('Authorization', 'test-token').expect(501);
+      await request(app).post(`/v1/${kind}/favorite`).set('Authorization', 'test-token')
+        .send({ id: '1', status: true }).expect(501);
+    }
+  });
+});

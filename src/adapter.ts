@@ -44,7 +44,7 @@ export interface WowAdapter {
   getTrackLyrics?(id: string): Promise<TrackLyrics>;
   favoriteTrack?(id: string, status: boolean): Promise<MutationStatus>;
   getDailyTracks?(): Promise<Track[]>;
-  getTrackRoam?(): Promise<Track[]>;
+  getRoamTracks?(): Promise<Track[]>;
   searchSuggest?(keyword: string): Promise<SearchSuggest>;
   searchTracks?(keyword: string, offset: number, limit: number): Promise<TrackPage>;
   searchArtists?(keyword: string, offset: number, limit: number): Promise<ArtistPage>;
@@ -105,7 +105,7 @@ const capabilityMethods = {
   favoriteTracks: ['userFavoriteTracks'],
   userPlaylists: ['getUserPlaylist'],
   userProfile: ['getUserMe'],
-  trackRoam: ['getTrackRoam'],
+  roamTracks: ['getRoamTracks'],
   dailyTracks: ['getDailyTracks']
 } as const;
 

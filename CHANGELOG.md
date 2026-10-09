@@ -1,5 +1,12 @@
 # aduoer-wow-sdk
 
+## 0.3.2
+
+### Patch Changes
+
+- 0db497b: 分别声明 searchTracks、searchArtists、searchAlbums、searchPlaylists 和 searchSuggest 能力，移除聚合 search 标识，并在 README 列出全部能力及其实现条件
+- 将歌曲漫游能力 trackRoam 重命名为 roamTracks，对应 Adapter 方法 getTrackRoam 改为 getRoamTracks；HTTP 路径 GET /v1/track/roam 保持不变，源项目需要同步更新方法实现
+
 ## 0.3.1
 
 ### Patch Changes

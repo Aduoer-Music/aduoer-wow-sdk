@@ -251,7 +251,7 @@ export const wowRoutes: WowRouteDefinition[] = [
     run: ({ adapter }, request) => callAdapter(adapter, 'favoriteTrack', [bodyString(request, 'id'), request.body.status], 'trackFavorite')
   },
   simpleGet('/track/daily', '获取每日推荐歌曲', 'discovery', 'Track', 'getDailyTracks', 'dailyTracks', true),
-  simpleGet('/track/roam', '获取歌曲漫游歌曲', 'discovery', 'Track', 'getTrackRoam', 'trackRoam', true),
+  simpleGet('/track/roam', '获取歌曲漫游歌曲', 'discovery', 'Track', 'getRoamTracks', 'roamTracks', true),
   {
     method: 'get', path: '/search/suggest', summary: '获取搜索建议', tag: 'search', response: 'SearchSuggest', parameters: [keywordParam],
     run: ({ adapter }, request) => callAdapter(adapter, 'searchSuggest', [stringValue(request.query.keyword, 'keyword')], 'search')

@@ -132,7 +132,7 @@ describe('createWowRouter', () => {
 
   it('歌曲漫游能力和路由由同一个 Adapter 方法提供', async () => {
     const adapter: WowAdapter = {
-      getTrackRoam: async () => [track]
+      getRoamTracks: async () => [track]
     };
     const app = createApp(adapter);
 
@@ -140,7 +140,8 @@ describe('createWowRouter', () => {
       .get('/v1/status')
       .set('Authorization', 'test-token')
       .expect(200);
-    expect(status.body.data.capabilities).toContain('trackRoam');
+    expect(status.body.data.capabilities).toContain('roamTracks');
+    expect(status.body.data.capabilities).not.toContain('trackRoam');
 
     const response = await request(app)
       .get('/v1/track/roam')

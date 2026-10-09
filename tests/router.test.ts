@@ -31,6 +31,37 @@ function createApp(adapter: WowAdapter, token = 'test-token', stateless?: boolea
 }
 
 describe('createWowRouter', () => {
+  it('每种搜索能力独立声明，完整实现也不声明聚合搜索能力', async () => {
+    const methods = ['searchTracks', 'searchArtists', 'searchAlbums', 'searchPlaylists'] as const;
+    for (let mask = 0; mask < 16; mask++) {
+      const implemented = methods.filter((_, index) => mask & (1 << index));
+      const adapter: WowAdapter = Object.fromEntries(implemented.map((method) => [
+        method, async () => ({ items: [], offset: 0, limit: 20, hasMore: false })
+      ]));
+      const status = await request(createApp(adapter))
+        .get('/v1/status').set('Authorization', 'test-token').expect(200);
+      expect(status.body.data.capabilities).toEqual(implemented);
+    }
+  });
+
+  it('只有歌曲搜索时该接口可用，未声明的搜索接口返回 501', async () => {
+    const app = createApp({ searchTracks: async () => ({ items: [track], offset: 0, limit: 20, hasMore: false }) });
+    const response = await request(app)
+      .get('/v1/search/tracks?keyword=test').set('Authorization', 'test-token').expect(200);
+    expect(response.body.data.items).toEqual([track]);
+    await request(app)
+      .get('/v1/search/artists?keyword=test').set('Authorization', 'test-token').expect(501);
+  });
+
+  it('搜索建议独立声明，不依赖四类搜索', async () => {
+    const app = createApp({ searchSuggest: async () => ({ songs: [], artists: [], albums: [] }) });
+    const status = await request(app)
+      .get('/v1/status').set('Authorization', 'test-token').expect(200);
+    expect(status.body.data.capabilities).toEqual(['searchSuggest']);
+    await request(app)
+      .get('/v1/search/suggest?keyword=test').set('Authorization', 'test-token').expect(200);
+  });
+
   it('能力推断默认按无状态源过滤用户数据能力', () => {
     const capabilities = inferCapabilities({
       getUserPlaylist: async () => [],

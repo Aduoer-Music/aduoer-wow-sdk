@@ -103,4 +103,4 @@ app.listen(3000);
 
 ## OpenAPI 文档
 
-SDK 在构建时从 TypeBox Schema 生成 `openapi.json`。每次 `main` 分支更新后，GitHub Actions 会更新 [`openapi-latest` Release](https://docs.aduoer.waizx.com/development/api-reference) 中的 `openapi.json`，供文档站构建时下载。
+SDK 在构建时从 TypeBox Schema 生成 `openapi.json`。每次 `main` 分支更新后，GitHub Actions 会更新 [`openapi-latest` Release](https://docs.aduoer.app/development/api-reference) 中的 `openapi.json`，供文档站构建时下载。

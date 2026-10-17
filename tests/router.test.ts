@@ -407,3 +407,34 @@ describe('艺人和专辑基础收藏接口', () => {
     }
   });
 });
+
+describe('条目来源标签', () => {
+  it.each([undefined, null, '', '   ', '来源 A', '超过建议十字符的来源标签仍然有效'])('所有条目与详情保留可选标签 %s', async (fromLabel) => {
+    const artist = { ...track.artists[0]!, fromLabel };
+    const album = { ...track.album, fromLabel };
+    const item = { ...track, fromLabel, artists: [artist], album };
+    const playlist = { id: 'p', name: '歌单', description: '', coverUrl: '', trackCount: 1, fromLabel, tracks: [item] };
+    const { tracks: _tracks, ...playlistItem } = playlist;
+    const app = createApp({
+      getTrackDetail: async () => item,
+      getTopArtists: async () => [artist],
+      getArtistDetail: async () => ({ ...artist, tracks: [item] }),
+      getArtistAlbums: async () => ({ items: [album], offset: 0, limit: 20, hasMore: false }),
+      getAlbumDetail: async () => ({ ...album, tracks: [item] }),
+      getPlaylists: async () => ({ items: [playlistItem], offset: 0, limit: 20, hasMore: false }),
+      getPlaylistDetail: async () => playlist
+    });
+    for (const [path, expected] of [
+      ['/v1/track?id=t', item],
+      ['/v1/artist/top', [artist]],
+      ['/v1/artist/detail?id=a', { ...artist, tracks: [item] }],
+      ['/v1/artist/albums?id=a', { items: [album], offset: 0, limit: 20, hasMore: false }],
+      ['/v1/album/detail?id=a', { ...album, tracks: [item] }],
+      ['/v1/playlist/list', { items: [playlistItem], offset: 0, limit: 20, hasMore: false }],
+      ['/v1/playlist/detail?id=p', playlist]
+    ] as const) {
+      const response = await request(app).get(path).set('Authorization', 'test-token').expect(200);
+      expect(response.body.data).toEqual(JSON.parse(JSON.stringify(expected)));
+    }
+  });
+});

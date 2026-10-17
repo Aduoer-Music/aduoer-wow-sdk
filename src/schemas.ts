@@ -23,7 +23,10 @@ export const StatusSchema = Type.Object({
   playlistSortOptions: Type.Optional(Type.Array(PlaylistSortOptionSchema, { description: '歌单歌曲排序选项；未配置时返回空数组。' }))
 }, { $id: 'Status', description: 'Wow 音乐源的运行状态与能力信息。', additionalProperties: false });
 
+const fromLabel = () => Type.Optional(nullable(Type.String(), '条目来源标签，建议不超过 10 字符（ASCII 算 1，其余字符算 2），此建议不作硬性校验。仅适用于包含多个来源的 Wow 音源；如果只有一个来源，请勿提供此参数，否则可能干扰客户端展示。省略、null、空字符串或纯空白均不展示额外标签。客户端显示为“客户端音源名称-fromLabel”，两段共用 16 字符预算，连接短横线不计数；超限先截源名称，最短保留 6 字符，仍超限再截标签；原名称不足 6 字符时保留原名称。'));
+
 export const ArtistSchema = Type.Object({
+  fromLabel: fromLabel(),
   favorite: Type.Optional(Type.Boolean({ description: '当前账号是否已收藏该艺人。' })),
   id: Type.String({ description: '艺人在当前音乐平台中的唯一标识。' }),
   name: Type.String({ description: '艺人名称。' }),
@@ -31,6 +34,7 @@ export const ArtistSchema = Type.Object({
 }, { $id: 'Artist', description: '艺人的基础信息。', additionalProperties: false });
 
 export const AlbumSchema = Type.Object({
+  fromLabel: fromLabel(),
   favorite: Type.Optional(Type.Boolean({ description: '当前账号是否已收藏该专辑。' })),
   id: Type.String({ description: '专辑在当前音乐平台中的唯一标识。' }),
   name: Type.String({ description: '专辑名称。' }),
@@ -53,6 +57,7 @@ export const QualitySchema = Type.Object({
 }, { $id: 'Quality', description: '歌曲可用的单个音质信息。', additionalProperties: false });
 
 export const TrackSchema = Type.Object({
+  fromLabel: fromLabel(),
   id: Type.String({ description: '歌曲在当前音乐平台中的唯一标识。' }),
   title: Type.String({ description: '歌曲标题。' }),
   artists: Type.Array(ArtistSchema, { description: '参与歌曲的艺人列表。' }),
@@ -72,6 +77,7 @@ export const CreatorSchema = Type.Object({
 }, { $id: 'Creator', description: '歌单创建者信息。', additionalProperties: false });
 
 export const PlaylistSchema = Type.Object({
+  fromLabel: fromLabel(),
   id: Type.String({ description: '歌单在当前音乐平台中的唯一标识。' }),
   name: Type.String({ description: '歌单名称。' }),
   description: Type.String({ description: '歌单简介。' }),

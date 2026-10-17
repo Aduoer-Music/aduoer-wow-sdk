@@ -60,6 +60,14 @@ app.listen(3000);
 
 完整教程与 Scalar API Reference 位于 [Aduoer 开发文档](https://aduoer-music.github.io/docs/development/)。
 
+## 条目来源标签
+
+歌曲、艺人、专辑、歌单及对应详情支持可选的 `fromLabel?: string | null`。只有包含多个来源的 Wow 音源才应按条目提供标签，例如 `fromLabel: '来源 A'`；如果 Wow 只有一个来源，请勿提供此参数，否则可能干扰客户端展示
+
+建议标签不超过 10 字符（ASCII 算 1，其余字符算 2），这只是建议，不做硬性长度校验。客户端显示为 `客户端音源名称-fromLabel`，两段共用 16 字符预算，连接短横线不计数。超限先截源名称，最短保留 6 字符；仍超限再截标签。原名称不足 6 字符时保留原名称
+
+省略、`null`、空字符串或纯空白均不展示额外标签；聚合源保留客户端音源名称，非聚合源不显示来源标签
+
 ## Capabilities
 
 `GET /v1/status` 的 `data.capabilities` 根据当前请求上下文中的 Adapter 方法自动生成，无需手动维护能力清单

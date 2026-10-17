@@ -1,5 +1,11 @@
 # aduoer-wow-sdk
 
+## 0.3.3
+
+### Patch Changes
+
+- 歌曲、艺人、专辑、歌单及详情新增可选 `fromLabel` 来源标签，补充客户端展示规则与单来源使用建议
+
 ## 0.3.2
 
 ### Patch Changes

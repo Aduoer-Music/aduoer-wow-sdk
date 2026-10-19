@@ -259,7 +259,7 @@ describe('createWowRouter', () => {
         name: '示例歌单',
         description: '',
         coverUrl: 'https://example.com/playlist.jpg',
-        trackCount: 1,
+        trackCount: 1, favorite: false,
         tracks: [track]
       })
     }))
@@ -276,7 +276,7 @@ describe('createWowRouter', () => {
     app.use(createWowRouter({ resolveContext: () => ({
       adapter: { getPlaylistDetail: async (id, _limit, sort, order) => {
         calls.push([sort, order]);
-        return { id, name: '示例', description: '', coverUrl: '', trackCount: 1, tracks: [track] };
+        return { id, name: '示例', description: '', coverUrl: '', trackCount: 1, favorite: false, tracks: [track] };
       } },
       playlistSortOptions: [{ key: 'title', label: 'Track' }]
     }) }));
@@ -413,7 +413,7 @@ describe('条目来源标签', () => {
     const artist = { ...track.artists[0]!, fromLabel };
     const album = { ...track.album, fromLabel };
     const item = { ...track, fromLabel, artists: [artist], album };
-    const playlist = { id: 'p', name: '歌单', description: '', coverUrl: '', trackCount: 1, fromLabel, tracks: [item] };
+    const playlist = { id: 'p', name: '歌单', description: '', coverUrl: '', trackCount: 1, favorite: false, fromLabel, tracks: [item] };
     const { tracks: _tracks, ...playlistItem } = playlist;
     const app = createApp({
       getTrackDetail: async () => item,
@@ -436,5 +436,13 @@ describe('条目来源标签', () => {
       const response = await request(app).get(path).set('Authorization', 'test-token').expect(200);
       expect(response.body.data).toEqual(JSON.parse(JSON.stringify(expected)));
     }
+  });
+});
+
+describe('歌单收藏协议', () => {
+  it.each([{}, { favorite: false, favoriteCount: 10 }])('拒绝缺少状态或包含旧收藏数量的歌单 %j', async (extra) => {
+    const invalid = { id: 'p', name: '歌单', description: '', coverUrl: '', trackCount: 0, ...extra };
+    const app = createApp({ getPlaylistDetail: async () => ({ ...invalid, tracks: [] }) } as any);
+    await request(app).get('/v1/playlist/detail?id=p').set('Authorization', 'test-token').expect(500);
   });
 });

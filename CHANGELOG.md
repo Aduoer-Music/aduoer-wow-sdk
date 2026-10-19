@@ -1,5 +1,11 @@
 # aduoer-wow-sdk
 
+## 0.3.4
+
+### Patch Changes
+
+- 歌单和歌单详情新增必填 favorite，表示当前账号的收藏状态；删除未使用的 favoriteCount。自己的歌单应返回 false，已收藏的非自建歌单返回 true。所有歌单响应必须同步更新。
+
 ## 0.3.3
 
 ### Patch Changes

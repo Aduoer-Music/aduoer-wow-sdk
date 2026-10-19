@@ -84,7 +84,7 @@ export const PlaylistSchema = Type.Object({
   coverUrl: Type.String({ description: '歌单封面图片地址。' }),
   trackCount: Type.Integer({ minimum: 0, description: '歌单包含的歌曲数量。' }),
   playCount: Type.Optional(Type.Number({ minimum: 0, description: '歌单累计播放次数。' })),
-  favoriteCount: Type.Optional(Type.Number({ minimum: 0, description: '歌单被收藏的次数。' })),
+  favorite: Type.Boolean({ description: '当前账号是否已收藏该歌单；自己的歌单为 false。' }),
   tags: Type.Optional(Type.Array(Type.String(), { description: '歌单标签列表。' })),
   creator: Type.Optional(Type.Intersect([CreatorSchema], { description: '歌单创建者。' })),
   createdAt: Type.Optional(nullable(Type.Number(), '歌单创建时间的 Unix 时间戳（毫秒）；未知时为 null。')),

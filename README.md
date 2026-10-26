@@ -60,6 +60,15 @@ app.listen(3000);
 
 完整教程与 Scalar API Reference 位于 [Aduoer 开发文档](https://aduoer-music.github.io/docs/development/)。
 
+## 歌曲位置
+
+`Track` 支持以下可选字段，未知时省略。
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `discNumber` | 正整数 | 碟号，从 1 开始 |
+| `trackNumber` | 正整数 | 当前碟内的曲号，从 1 开始 |
+
 ## 条目来源标签
 
 歌曲、艺人、专辑、歌单及对应详情支持可选的 `fromLabel?: string | null`。只有包含多个来源的 Wow 音源才应按条目提供标签，例如 `fromLabel: '来源 A'`；如果 Wow 只有一个来源，请勿提供此参数，否则可能干扰客户端展示

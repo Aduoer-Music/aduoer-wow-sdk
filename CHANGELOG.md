@@ -1,5 +1,11 @@
 # aduoer-wow-sdk
 
+## 0.3.5
+
+### Patch Changes
+
+- Track 新增可选正整数 `discNumber` 和 `trackNumber`，分别表示从 1 开始的碟号和碟内曲号。
+
 ## 0.3.4
 
 ### Patch Changes

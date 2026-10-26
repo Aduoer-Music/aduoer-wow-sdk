@@ -63,6 +63,8 @@ export const TrackSchema = Type.Object({
   artists: Type.Array(ArtistSchema, { description: '参与歌曲的艺人列表。' }),
   album: Type.Intersect([AlbumSchema], { description: '歌曲所属专辑。' }),
   durationMs: Type.Number({ minimum: 0, description: '歌曲时长，单位为毫秒。' }),
+  discNumber: Type.Optional(Type.Integer({ minimum: 1, description: '歌曲所属碟号，从 1 开始。' })),
+  trackNumber: Type.Optional(Type.Integer({ minimum: 1, description: '歌曲在当前碟内的曲号，从 1 开始。' })),
   aliases: Type.Optional(Type.Array(Type.String(), { description: '歌曲别名或副标题列表。' })),
   mvId: Type.Optional(nullable(Type.String(), '关联 MV 的平台标识；没有 MV 时为 null。')),
   favorite: Type.Optional(Type.Boolean({ description: '当前账号是否已收藏该歌曲。' })),

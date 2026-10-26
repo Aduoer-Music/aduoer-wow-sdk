@@ -241,6 +241,37 @@ describe('createWowRouter', () => {
       .expect(200);
   });
 
+  it('歌曲详情和专辑详情保留实际碟号与不连续曲号', async () => {
+    const tracks = [
+      { ...track, id: 'eighth', discNumber: 1, trackNumber: 8 },
+      { ...track, id: 'twelfth', discNumber: 1, trackNumber: 12 },
+      { ...track, id: 'second-disc', discNumber: 2, trackNumber: 1 },
+      { ...track, id: 'unknown' }
+    ];
+    const app = createApp({
+      getTrackDetail: async () => tracks[0]!,
+      getAlbumDetail: async () => ({ ...track.album, tracks })
+    });
+    const detail = await request(app).get('/v1/track?id=eighth')
+      .set('Authorization', 'test-token').expect(200);
+    expect(detail.body.data).toEqual(tracks[0]);
+    const album = await request(app).get('/v1/album/detail?id=album-1')
+      .set('Authorization', 'test-token').expect(200);
+    expect(album.body.data.tracks).toEqual(tracks);
+    const schema = openApiDocument.components.schemas.Track;
+    expect(schema.properties.discNumber).toMatchObject({ type: 'integer', minimum: 1 });
+    expect(schema.properties.trackNumber).toMatchObject({ type: 'integer', minimum: 1 });
+    expect(schema.required).not.toContain('discNumber');
+    expect(schema.required).not.toContain('trackNumber');
+  });
+
+  it.each([0, -1, 1.5, '2', null])('拒绝无效的歌曲位置 %j', async (value) => {
+    for (const field of ['discNumber', 'trackNumber']) {
+      await request(createApp({ getTrackDetail: async () => ({ ...track, [field]: value } as Track) }))
+        .get('/v1/track?id=track-1').set('Authorization', 'test-token').expect(500);
+    }
+  });
+
   it('校验 Adapter 响应', async () => {
     const response = await request(createApp({
       getTrackDetail: async () => ({ id: 'invalid' } as Track)

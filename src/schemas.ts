@@ -172,6 +172,18 @@ export const MutationSuccessSchema = Type.Object({
   success: Type.Boolean({ description: '操作是否执行成功。' })
 }, { $id: 'MutationSuccess', description: '不包含额外数据的写操作结果。', additionalProperties: false });
 
+export const MutationFailureSchema = Type.Object({
+  id: Type.String({ minLength: 1, description: '处理失败的歌曲 ID。' })
+}, { $id: 'MutationFailure', description: '批量操作中的失败歌曲。', additionalProperties: false });
+
+export const TrackFavoriteResultSchema = Type.Union([
+  MutationStatusSchema, Type.Array(MutationFailureSchema)
+], { $id: 'TrackFavoriteResult', description: 'id 请求返回单曲状态；ids 请求仅返回失败歌曲，空数组表示全部成功。' });
+
+export const PlaylistTrackAdditionResultSchema = Type.Union([
+  MutationSuccessSchema, Type.Array(MutationFailureSchema)
+], { $id: 'PlaylistTrackAdditionResult', description: 'trackId 请求返回单曲结果；trackIds 请求仅返回失败歌曲，空数组表示全部成功。' });
+
 export const paginatedSchema = <T extends TSchema>(item: T, id?: string) => Type.Object({
   items: Type.Array(item, { description: '当前页的数据列表。' }),
   offset: Type.Integer({ minimum: 0, description: '当前页相对于结果集起点的偏移量。' }),
@@ -220,6 +232,9 @@ export const schemas = {
   UserProfile: UserProfileSchema,
   MutationStatus: MutationStatusSchema,
   MutationSuccess: MutationSuccessSchema,
+  MutationFailure: MutationFailureSchema,
+  TrackFavoriteResult: TrackFavoriteResultSchema,
+  PlaylistTrackAdditionResult: PlaylistTrackAdditionResultSchema,
   PlaylistPage: PlaylistPageSchema,
   TrackPage: TrackPageSchema,
   ArtistPage: ArtistPageSchema,
@@ -247,6 +262,7 @@ export type SearchSuggest = Static<typeof SearchSuggestSchema>;
 export type UserProfile = Static<typeof UserProfileSchema>;
 export type MutationStatus = Static<typeof MutationStatusSchema>;
 export type MutationSuccess = Static<typeof MutationSuccessSchema>;
+export type MutationFailure = Static<typeof MutationFailureSchema>;
 export type PlaylistPage = Static<typeof PlaylistPageSchema>;
 export type TrackPage = Static<typeof TrackPageSchema>;
 export type ArtistPage = Static<typeof ArtistPageSchema>;

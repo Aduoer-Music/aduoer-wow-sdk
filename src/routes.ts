@@ -2,7 +2,7 @@ import type { Request } from 'express';
 import { Type, type TSchema } from '@sinclair/typebox';
 import type { WowAdapter, WowRequestContext } from './adapter';
 import { BadRequestError, UnsupportedFeatureError } from './errors';
-import type { schemas } from './schemas';
+import type { MutationFailure, schemas } from './schemas';
 import { sdkVersion } from './version';
 
 export type SchemaName = keyof typeof schemas;
@@ -84,6 +84,37 @@ const favoriteBody = (resourceName: string) => Type.Object({
   id: Type.String({ minLength: 1, description: `${resourceName}在当前音乐平台中的唯一标识。` }),
   status: Type.Boolean({ description: '目标收藏状态；true 表示收藏，false 表示取消收藏。' })
 }, { description: `修改${resourceName}收藏状态所需参数。`, additionalProperties: false });
+
+const addPlaylistTracksBody = Type.Object({
+  playlistId: Type.String({ minLength: 1, description: '目标歌单 ID。' }),
+  trackId: Type.Optional(Type.String({ minLength: 1, description: '单曲 ID；与 trackIds 同时提供时优先使用。' })),
+  trackIds: Type.Optional(Type.String({ minLength: 1, description: '批量歌曲 ID，用逗号分隔；单首也可使用此参数。' }))
+}, { description: 'trackId、trackIds 至少提供一个；单曲结果保持不变，批量结果只返回失败 ID。', additionalProperties: false });
+
+const favoriteTracksBody = Type.Object({
+  id: Type.Optional(Type.String({ minLength: 1, description: '单曲 ID；与 ids 同时提供时优先使用。' })),
+  ids: Type.Optional(Type.String({ minLength: 1, description: '批量歌曲 ID，用逗号分隔；单首也可使用此参数。' })),
+  status: Type.Boolean({ description: '目标收藏状态。' })
+}, { description: 'id、ids 至少提供一个；单曲结果保持不变，批量结果只返回失败 ID。', additionalProperties: false });
+
+function batchIDs(value: unknown, name: string): string[] {
+  const ids = stringValue(value, name)!.split(',').map((id) => id.trim());
+  if (ids.some((id) => !id)) throw new BadRequestError(`${name} must contain non-empty IDs`);
+  return [...new Set(ids)];
+}
+
+/** 无原生批量接口的 Adapter 逐首执行并收集失败；不重试，也不因单首失败中断。 */
+async function mutateIndividually(ids: string[], mutate: (id: string) => Promise<boolean>): Promise<MutationFailure[]> {
+  const failures: MutationFailure[] = [];
+  for (const id of ids) {
+    try {
+      if (!await mutate(id)) failures.push({ id });
+    } catch {
+      failures.push({ id });
+    }
+  }
+  return failures;
+}
 
 type AdapterMethod = keyof WowAdapter;
 type AsyncAdapterFunction = (...args: never[]) => Promise<unknown>;
@@ -214,8 +245,17 @@ export const wowRoutes: WowRouteDefinition[] = [
     ], 'playlistMutation')
   },
   {
-    method: 'post', path: '/playlist/addTrack', summary: '添加歌曲到歌单', tag: 'playlist', response: 'MutationSuccess', bodySchema: playlistTrackBody, requiresStateful: true,
-    run: ({ adapter }, request) => callAdapter(adapter, 'addTrackToPlaylist', [bodyString(request, 'playlistId'), bodyString(request, 'trackId')], 'playlistMutation')
+    method: 'post', path: '/playlist/addTrack', summary: '添加歌曲到歌单', tag: 'playlist', response: 'PlaylistTrackAdditionResult', bodySchema: addPlaylistTracksBody, requiresStateful: true,
+    run: async ({ adapter }, request) => {
+      const playlistId = bodyString(request, 'playlistId');
+      if (request.body.trackId !== undefined) {
+        return callAdapter(adapter, 'addTrackToPlaylist', [playlistId, bodyString(request, 'trackId')], 'playlistMutation');
+      }
+      const ids = batchIDs(request.body.trackIds, 'trackIds');
+      if (adapter.addTracksToPlaylist) return adapter.addTracksToPlaylist(playlistId, ids);
+      if (!adapter.addTrackToPlaylist) throw new UnsupportedFeatureError('playlistMutation');
+      return mutateIndividually(ids, async (id) => (await adapter.addTrackToPlaylist!(playlistId, id)).success);
+    }
   },
   {
     method: 'post', path: '/playlist/removeTrack', summary: '从歌单移除歌曲', tag: 'playlist', response: 'MutationSuccess', bodySchema: playlistTrackBody, requiresStateful: true,
@@ -247,8 +287,20 @@ export const wowRoutes: WowRouteDefinition[] = [
     run: ({ adapter }, request) => callAdapter(adapter, 'getTrackLyrics', [stringValue(request.query.id, 'id')], 'lyrics')
   },
   {
-    method: 'post', path: '/track/favorite', summary: '收藏或取消收藏歌曲', tag: 'track', response: 'MutationStatus', bodySchema: favoriteBody('歌曲'), requiresStateful: true,
-    run: ({ adapter }, request) => callAdapter(adapter, 'favoriteTrack', [bodyString(request, 'id'), request.body.status], 'trackFavorite')
+    method: 'post', path: '/track/favorite', summary: '收藏或取消收藏歌曲', tag: 'track', response: 'TrackFavoriteResult', bodySchema: favoriteTracksBody, requiresStateful: true,
+    run: async ({ adapter }, request) => {
+      const status: boolean = request.body.status;
+      if (request.body.id !== undefined) {
+        return callAdapter(adapter, 'favoriteTrack', [bodyString(request, 'id'), status], 'trackFavorite');
+      }
+      const ids = batchIDs(request.body.ids, 'ids');
+      if (adapter.favoriteTracks) return adapter.favoriteTracks(ids, status);
+      if (!adapter.favoriteTrack) throw new UnsupportedFeatureError('trackFavorite');
+      return mutateIndividually(ids, async (id) => {
+        const result = await adapter.favoriteTrack!(id, status);
+        return result.success && result.status === status;
+      });
+    }
   },
   simpleGet('/track/daily', '获取每日推荐歌曲', 'discovery', 'Track', 'getDailyTracks', 'dailyTracks', true),
   simpleGet('/track/roam', '获取歌曲漫游歌曲', 'discovery', 'Track', 'getRoamTracks', 'roamTracks', true),

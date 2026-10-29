@@ -121,3 +121,15 @@ app.listen(3000);
 ## OpenAPI 文档
 
 SDK 在构建时从 TypeBox Schema 生成 `openapi.json`。每次 `main` 分支更新后，GitHub Actions 会更新 [`openapi-latest` Release](https://docs.aduoer.app/development/api-reference) 中的 `openapi.json`，供文档站构建时下载。
+
+
+### 批量收藏和添加歌曲
+
+`POST /v1/track/favorite` 接收 `{ ids: "id1,id2", status: true }`，
+`POST /v1/playlist/addTrack` 接收 `{ playlistId: "playlist", trackIds: "id1,id2" }`。
+批量参数只有一个 ID 时也返回批量结果。响应 `data` 只包含失败项，例如 `[{ "id": "id2" }]`；空数组表示全部成功。
+请求整体失败仍使用非 200 HTTP 响应，不返回伪造的逐首结果。
+
+原参数 `id` / `trackId` 继续返回原单曲结果；同时提供两种参数时优先使用单曲参数。
+Adapter 可实现 `favoriteTracks(ids, status)` 和 `addTracksToPlaylist(playlistId, trackIds)` 使用上游原生批量接口。
+未提供批量方法时，SDK 逐首执行原方法并收集失败，不因某首抛错或 `success: false` 中断后续歌曲。

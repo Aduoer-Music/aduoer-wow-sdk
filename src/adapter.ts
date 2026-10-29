@@ -8,6 +8,7 @@ import type {
   ArtistPage,
   MutationStatus,
   MutationSuccess,
+  MutationFailure,
   Playlist,
   PlaylistCategory,
   PlaylistDetail,
@@ -36,6 +37,7 @@ export interface WowAdapter {
   deletePlaylist?(id: string): Promise<MutationSuccess>;
   updatePlaylist?(id: string, name: string, description: string): Promise<Playlist>;
   addTrackToPlaylist?(playlistId: string, trackId: string): Promise<MutationSuccess>;
+  addTracksToPlaylist?(playlistId: string, trackIds: string[]): Promise<MutationFailure[]>;
   removeTrack?(playlistId: string, trackId: string): Promise<MutationSuccess>;
   favoritePlaylist?(id: string, status: boolean): Promise<MutationStatus>;
   getTrackDetail?(id: string): Promise<Track>;
@@ -43,6 +45,7 @@ export interface WowAdapter {
   getTrackUrl?(id: string, quality?: string): Promise<TrackUrl>;
   getTrackLyrics?(id: string): Promise<TrackLyrics>;
   favoriteTrack?(id: string, status: boolean): Promise<MutationStatus>;
+  favoriteTracks?(ids: string[], status: boolean): Promise<MutationFailure[]>;
   getDailyTracks?(): Promise<Track[]>;
   getRoamTracks?(): Promise<Track[]>;
   searchSuggest?(keyword: string): Promise<SearchSuggest>;

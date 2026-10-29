@@ -1,6 +1,6 @@
 import express from 'express';
 import request from 'supertest';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   createWowRouter,
   inferCapabilities,
@@ -475,5 +475,73 @@ describe('歌单收藏协议', () => {
     const invalid = { id: 'p', name: '歌单', description: '', coverUrl: '', trackCount: 0, ...extra };
     const app = createApp({ getPlaylistDetail: async () => ({ ...invalid, tracks: [] }) } as any);
     await request(app).get('/v1/playlist/detail?id=p').set('Authorization', 'test-token').expect(500);
+  });
+});
+
+
+describe('batch track mutations', () => {
+  it('批量参数即使只有一个 ID 也使用批量 Adapter，并只返回失败 ID', async () => {
+    const favoriteTracks = vi.fn(async () => [{ id: 'bad' }]);
+    const addTracksToPlaylist = vi.fn(async () => []);
+    const app = createApp({ favoriteTracks, addTracksToPlaylist }, 'test-token', false);
+    const favorite = await request(app).post('/v1/track/favorite')
+      .set('Authorization', 'test-token').send({ ids: 'good,bad,good', status: true }).expect(200);
+    expect(favorite.body.data).toEqual([{ id: 'bad' }]);
+    expect(favoriteTracks).toHaveBeenCalledExactlyOnceWith(['good', 'bad'], true);
+    const add = await request(app).post('/v1/playlist/addTrack')
+      .set('Authorization', 'test-token').send({ playlistId: 'list', trackIds: 'one' }).expect(200);
+    expect(add.body.data).toEqual([]);
+    expect(addTracksToPlaylist).toHaveBeenCalledExactlyOnceWith('list', ['one']);
+  });
+
+  it('单 ID 优先并保持原有响应，不调用批量方法', async () => {
+    const favoriteTracks = vi.fn();
+    const addTracksToPlaylist = vi.fn();
+    const favoriteTrack = vi.fn(async (_id: string, status: boolean) => ({ success: true, status }));
+    const addTrackToPlaylist = vi.fn(async () => ({ success: true }));
+    const app = createApp({ favoriteTracks, favoriteTrack, addTracksToPlaylist, addTrackToPlaylist }, 'test-token', false);
+    const favorite = await request(app).post('/v1/track/favorite').set('Authorization', 'test-token')
+      .send({ id: 'single', ids: 'other,another', status: false }).expect(200);
+    expect(favorite.body.data).toEqual({ success: true, status: false });
+    expect(favoriteTrack).toHaveBeenCalledExactlyOnceWith('single', false);
+    const add = await request(app).post('/v1/playlist/addTrack').set('Authorization', 'test-token')
+      .send({ playlistId: 'list', trackId: 'single', trackIds: 'other,another' }).expect(200);
+    expect(add.body.data).toEqual({ success: true });
+    expect(addTrackToPlaylist).toHaveBeenCalledExactlyOnceWith('list', 'single');
+    expect(favoriteTracks).not.toHaveBeenCalled();
+    expect(addTracksToPlaylist).not.toHaveBeenCalled();
+  });
+
+  it('无批量能力时逐首隔离异常和 success=false，后续歌曲仍执行', async () => {
+    const visited: string[] = [];
+    const app = createApp({
+      favoriteTrack: async (id, status) => {
+        visited.push(id);
+        if (id === 'throws') throw new Error('song failed');
+        return { success: id !== 'false', status: id === 'wrong-status' ? !status : status };
+      },
+      addTrackToPlaylist: async (_playlist, id) => {
+        if (id === 'throws') throw new Error('song failed');
+        return { success: id !== 'false' };
+      }
+    }, 'test-token', false);
+    const favorite = await request(app).post('/v1/track/favorite').set('Authorization', 'test-token')
+      .send({ ids: 'throws,false,wrong-status,last', status: true }).expect(200);
+    expect(favorite.body.data).toEqual([{ id: 'throws' }, { id: 'false' }, { id: 'wrong-status' }]);
+    expect(visited).toEqual(['throws', 'false', 'wrong-status', 'last']);
+    const add = await request(app).post('/v1/playlist/addTrack').set('Authorization', 'test-token')
+      .send({ playlistId: 'list', trackIds: 'throws,false,last' }).expect(200);
+    expect(add.body.data).toEqual([{ id: 'throws' }, { id: 'false' }]);
+  });
+
+  it('批量方法整体抛错时保留 HTTP 错误，不伪造逐首结果', async () => {
+    const app = createApp({ favoriteTracks: async () => { throw new Error('offline'); } }, 'test-token', false);
+    await request(app).post('/v1/track/favorite').set('Authorization', 'test-token')
+      .send({ ids: 'one,two', status: true }).expect(500);
+  });
+
+  it.each([{}, { ids: '' }, { ids: 'one,,two' }, { ids: ['one', 'two'] }])('拒绝缺失或无效的批量 ID：%j', async (body) => {
+    await request(createApp({}, 'test-token', false)).post('/v1/track/favorite')
+      .set('Authorization', 'test-token').send({ ...body, status: true }).expect(400);
   });
 });

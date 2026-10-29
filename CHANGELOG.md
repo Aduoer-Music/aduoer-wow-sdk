@@ -1,5 +1,11 @@
 # aduoer-wow-sdk
 
+## 0.4.0
+
+### Minor Changes
+
+- 收藏歌曲和添加歌单支持逗号分隔的批量参数，响应仅返回失败 ID。保留单 ID 参数及响应，并在同时传参时优先单 ID。Adapter 可提供原生批量实现；未提供时 SDK 逐首处理并隔离失败。
+
 ## 0.3.5
 
 ### Patch Changes

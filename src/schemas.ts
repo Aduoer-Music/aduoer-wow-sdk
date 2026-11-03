@@ -60,6 +60,8 @@ export const TrackSchema = Type.Object({
   fromLabel: fromLabel(),
   id: Type.String({ description: '歌曲在当前音乐平台中的唯一标识。' }),
   title: Type.String({ description: '歌曲标题。' }),
+  coverUrl: Type.Optional(nullable(Type.String(), '歌曲静态封面 URL；不可用时回退至 album.coverUrl。')),
+  animatedCoverUrl: Type.Optional(nullable(Type.String(), '动态封面视频 URL（可选）。比例 1:1 或 3:4，最大 32 MB（32×1024×1024 字节），须可由 AVAsset 播放，推荐 MP4。启用动态封面时优先使用；不可用时回退至 coverUrl、album.coverUrl。')),
   artists: Type.Array(ArtistSchema, { description: '参与歌曲的艺人列表。' }),
   album: Type.Intersect([AlbumSchema], { description: '歌曲所属专辑。' }),
   durationMs: Type.Number({ minimum: 0, description: '歌曲时长，单位为毫秒。' }),

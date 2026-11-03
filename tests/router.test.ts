@@ -31,6 +31,33 @@ function createApp(adapter: WowAdapter, token = 'test-token', stateless?: boolea
 }
 
 describe('createWowRouter', () => {
+  it('歌曲封面字段可省略或为 null，并在详情和列表响应中保留', async () => {
+    for (const fields of [{}, { coverUrl: null, animatedCoverUrl: null }, {
+      coverUrl: 'https://example.com/song.jpg', animatedCoverUrl: 'https://example.com/song.mp4'
+    }]) {
+      const item: Track = { ...track, ...fields };
+      const app = createApp({
+        getTrackDetail: async () => item,
+        searchTracks: async () => ({ items: [item], offset: 0, limit: 20, hasMore: false })
+      });
+      const detail = await request(app).get('/v1/track?id=t').set('Authorization', 'test-token').expect(200);
+      const list = await request(app).get('/v1/search/tracks?keyword=t').set('Authorization', 'test-token').expect(200);
+      expect(detail.body.data).toEqual(item);
+      expect(list.body.data.items).toEqual([item]);
+    }
+    const schema = openApiDocument.components.schemas.Track;
+    expect(schema.required).not.toContain('coverUrl');
+    expect(schema.required).not.toContain('animatedCoverUrl');
+  });
+
+  it('拒绝非字符串的歌曲封面字段', async () => {
+    for (const field of ['coverUrl', 'animatedCoverUrl']) {
+      const item = { ...track, [field]: 123 } as unknown as Track;
+      await request(createApp({ getTrackDetail: async () => item }))
+        .get('/v1/track?id=t').set('Authorization', 'test-token').expect(500);
+    }
+  });
+
   it('每种搜索能力独立声明，完整实现也不声明聚合搜索能力', async () => {
     const methods = ['searchTracks', 'searchArtists', 'searchAlbums', 'searchPlaylists'] as const;
     for (let mask = 0; mask < 16; mask++) {

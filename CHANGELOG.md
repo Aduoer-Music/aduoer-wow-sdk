@@ -1,5 +1,11 @@
 # aduoer-wow-sdk
 
+## 0.4.1
+
+### Patch Changes
+
+- 新增独立的 `/artist/list` 分页接口与 `getArtists` Adapter 方法。旧 `/artist/top` 标记弃用，保持原有行为。
+
 ## 0.4.0
 
 ### Minor Changes

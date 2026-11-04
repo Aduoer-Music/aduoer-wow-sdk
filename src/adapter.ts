@@ -30,7 +30,9 @@ export interface WowAdapter {
   getToplist?(): Promise<ToplistGroup[]>;
   getToplistTracks?(id: string, offset: number, limit: number): Promise<PlaylistDetail>;
   getNewTracks?(): Promise<Track[]>;
+  /** @deprecated 使用 getArtists。 */
   getTopArtists?(): Promise<ArtistPage['items']>;
+  getArtists?(offset: number, limit: number): Promise<ArtistPage>;
   getRecommendedPlaylist?(offset: number, limit: number): Promise<PlaylistPage>;
   getPlaylistDetail?(id: string, trackLimit?: number, sort?: string, order?: 'asc' | 'desc'): Promise<PlaylistDetail>;
   createPlaylist?(name: string): Promise<Playlist>;
@@ -92,6 +94,7 @@ const capabilityMethods = {
   toplistTracks: ['getToplistTracks'],
   newTracks: ['getNewTracks'],
   topArtists: ['getTopArtists'],
+  artistList: ['getArtists'],
   songDetail: ['getTrackDetail'],
   similarTracks: ['getSimilarTracks'],
   songUrl: ['getTrackUrl'],

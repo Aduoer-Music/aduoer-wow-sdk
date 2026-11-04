@@ -22,6 +22,7 @@ export interface WowRouteDefinition {
   tag: string;
   response: SchemaName;
   responseArray?: boolean;
+  deprecated?: boolean;
   parameters?: ParameterSpec[];
   bodySchema?: TSchema;
   requiresStateful?: boolean;
@@ -203,7 +204,14 @@ export const wowRoutes: WowRouteDefinition[] = [
     }
   },
   simpleGet('/track/new', '获取新歌列表', 'discovery', 'Track', 'getNewTracks', 'newTracks', true),
-  simpleGet('/artist/top', '获取热门艺人', 'discovery', 'Artist', 'getTopArtists', 'topArtists', true),
+  { ...simpleGet('/artist/top', '获取热门艺人（已弃用，请使用 /artist/list）', 'discovery', 'Artist', 'getTopArtists', 'topArtists', true), deprecated: true },
+  {
+    method: 'get', path: '/artist/list', summary: '获取艺人列表', tag: 'discovery', response: 'ArtistPage', parameters: paginationParams,
+    run: ({ adapter }, request) => {
+      const [offset, limit] = paging(request);
+      return callAdapter(adapter, 'getArtists', [offset, limit], 'artistList');
+    }
+  },
   {
     method: 'get', path: '/playlist/recommended', summary: '获取推荐歌单', tag: 'playlist', response: 'PlaylistPage', parameters: paginationParams,
     run: ({ adapter }, request) => {

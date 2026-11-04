@@ -42,6 +42,7 @@ const routePaths = Object.fromEntries(wowRoutes.map((route) => [
     [route.method]: {
       tags: [route.tag],
       summary: route.summary,
+      ...(route.deprecated ? { deprecated: true } : {}),
       description: `${route.summary}。成功响应的 data 字段为 ${route.responseArray ? `${route.response}[]` : route.response}。`,
       security: [{ ApiKeyAuth: [] }],
       parameters: route.parameters ?? [],

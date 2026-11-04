@@ -31,6 +31,43 @@ function createApp(adapter: WowAdapter, token = 'test-token', stateless?: boolea
 }
 
 describe('createWowRouter', () => {
+  it('艺人列表独立分页，旧热门艺人仍调用原方法并返回数组', async () => {
+    const artist = { id: 'artist-1', name: '艺人' };
+    const getArtists = vi.fn(async (offset: number, limit: number) => ({ items: [artist], offset, limit, hasMore: true }));
+    const getTopArtists = vi.fn(async () => [artist]);
+    const app = createApp({ getArtists, getTopArtists });
+    const first = await request(app).get('/v1/artist/list').set('Authorization', 'test-token').expect(200);
+    expect(first.body.data).toEqual({ items: [artist], offset: 0, limit: 20, hasMore: true });
+    const next = await request(app).get('/v1/artist/list?offset=79&limit=100&area=7').set('Authorization', 'test-token').expect(200);
+    expect(next.body.data).toMatchObject({ offset: 79, limit: 100 });
+    expect(getArtists).toHaveBeenLastCalledWith(79, 100);
+    expect(getTopArtists).not.toHaveBeenCalled();
+    const old = await request(app).get('/v1/artist/top').set('Authorization', 'test-token').expect(200);
+    expect(old.body.data).toEqual([artist]);
+    expect(getTopArtists).toHaveBeenCalledWith();
+    expect(inferCapabilities({ getArtists })).toEqual(['artistList']);
+    expect(inferCapabilities({ getTopArtists })).toEqual(['topArtists']);
+  });
+
+  it('旧源保留热门艺人接口，艺人列表返回不支持', async () => {
+    const app = createApp({ getTopArtists: async () => [] });
+    await request(app).get('/v1/artist/list').set('Authorization', 'test-token').expect(501);
+    await request(app).get('/v1/artist/top').set('Authorization', 'test-token').expect(200);
+    await request(createApp({ getArtists: async (offset, limit) => ({ items: [], offset, limit, hasMore: false }) }))
+      .get('/v1/artist/top').set('Authorization', 'test-token').expect(501);
+  });
+
+  it('艺人列表限制每页 100 条，OpenAPI 只声明分页并标记旧接口弃用', async () => {
+    const getArtists = vi.fn();
+    const app = createApp({ getArtists });
+    await request(app).get('/v1/artist/list?limit=101').set('Authorization', 'test-token').expect(400);
+    expect(getArtists).not.toHaveBeenCalled();
+    const paths = openApiDocument.paths as any;
+    expect(paths['/v1/artist/top'].get.deprecated).toBe(true);
+    expect(paths['/v1/artist/list'].get.deprecated).toBeUndefined();
+    expect(paths['/v1/artist/list'].get.parameters.map((p: any) => p.name)).toEqual(['offset', 'limit']);
+  });
+
   it('歌曲封面字段可省略或为 null，并在详情和列表响应中保留', async () => {
     for (const fields of [{}, { coverUrl: null, animatedCoverUrl: null }, {
       coverUrl: 'https://example.com/song.jpg', animatedCoverUrl: 'https://example.com/song.mp4'
